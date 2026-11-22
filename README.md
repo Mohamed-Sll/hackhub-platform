@@ -51,7 +51,7 @@ The durable internal map is in [`MEMORIA/INDEX.md`](MEMORIA/INDEX.md).
 Requirements: Python 3.12+ and Node.js 20+. Redis and Docker are optional.
 
 ```bash
-git clone https://github.com/mohamedsillahhh-cloud/hackhub-platform.git
+git clone https://github.com/Mohamed-Sll/hackhub-platform.git
 cd hackhub-platform
 
 cp backend/.env.example backend/.env
