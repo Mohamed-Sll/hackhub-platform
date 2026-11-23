@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FolderKanban, ExternalLink, Github } from 'lucide-react'
+import { FolderKanban, ExternalLink, Code2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -60,7 +60,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
             <div className="flex items-center gap-3 pt-2">
               {project.github_url && (
                 <span className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Github className="h-4 w-4" />
+                  <Code2 className="h-4 w-4" />
                 </span>
               )}
               {project.demo_video_url && (

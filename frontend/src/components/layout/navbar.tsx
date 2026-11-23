@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ChevronDown, LogOut, User, Users, Bell, LayoutDashboard } from 'lucide-react'
+import { Menu, X, ChevronDown, LogOut, User, Users, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -22,14 +22,16 @@ import {
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/events', label: 'Events' },
-  { href: '/dashboard', label: 'Dashboard' },
 ]
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const [mobileMenu, setMobileMenu] = useState({ open: false, pathname })
+  const isMobileMenuOpen = mobileMenu.open && mobileMenu.pathname === pathname
   const { user, isAuthenticated, logout } = useAuth()
+  const canManage = user?.role === 'organizer' || user?.role === 'admin'
+  const visibleLinks = canManage ? [...navLinks, { href: '/dashboard', label: 'Dashboard' }] : navLinks
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -37,41 +39,37 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  useEffect(() => {
-    setIsMobileMenuOpen(false)
-  }, [pathname])
-
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled
-          ? 'glass shadow-sm'
-          : 'bg-transparent'
+        'border-b border-border/70 bg-background/95 backdrop-blur-xl',
+        isScrolled && 'shadow-sm'
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-mono text-sm font-bold text-primary-foreground">
+              H
             </div>
-            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
+            <span className="text-xl font-semibold tracking-tight">
               HackHub
             </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {visibleLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                  pathname === link.href
+                  pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`))
                     ? 'text-primary bg-primary/10'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                 )}
+                aria-current={pathname === link.href ? 'page' : undefined}
               >
                 {link.label}
               </Link>
@@ -118,12 +116,6 @@ export function Navbar() {
                         My Teams
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer">
-                        <Bell className="mr-2 h-4 w-4" />
-                        Notifications
-                      </Link>
-                    </DropdownMenuItem>
                     {user?.role === 'organizer' || user?.role === 'admin' ? (
                       <DropdownMenuItem asChild>
                         <Link href="/dashboard" className="cursor-pointer">
@@ -156,8 +148,11 @@ export function Navbar() {
           </div>
 
           <button
+            type="button"
+            aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={isMobileMenuOpen}
             className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => setMobileMenu({ open: !isMobileMenuOpen, pathname })}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -173,13 +168,14 @@ export function Navbar() {
             className="md:hidden glass border-t"
           >
             <div className="px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
+              {visibleLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={() => setMobileMenu({ open: false, pathname })}
                   className={cn(
                     'block px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                    pathname === link.href
+                    pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`))
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
@@ -190,15 +186,18 @@ export function Navbar() {
               <div className="pt-2 border-t">
                 {isAuthenticated ? (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3 px-4 py-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar_url} />
-                        <AvatarFallback>{user?.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{user?.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    <div className="flex items-center justify-between gap-3 px-4 py-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user?.avatar_url} />
+                          <AvatarFallback>{user?.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{user?.full_name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+                        </div>
                       </div>
+                      <NotificationBell />
                     </div>
                     <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-accent rounded-lg">
                       Profile
@@ -206,6 +205,11 @@ export function Navbar() {
                     <Link href="/teams" className="block px-4 py-2 text-sm hover:bg-accent rounded-lg">
                       My Teams
                     </Link>
+                    {canManage && (
+                      <Link href="/dashboard" className="block px-4 py-2 text-sm hover:bg-accent rounded-lg">
+                        Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={() => logout()}
                       className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent rounded-lg"

@@ -1,19 +1,16 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import { Providers } from '@/components/layout/providers'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastProvider } from '@/components/ui/toast'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
   title: {
-    default: 'HackHub - Organize, Compete, Innovate',
+    default: 'HackHub — Hackathons, built together',
     template: '%s | HackHub',
   },
-  description: 'The ultimate platform for organizing and participating in hackathons. Connect, compete, and innovate.',
+  description: 'An open-source workspace for hackathon events, teams, project submissions, judging, rankings, and certificates.',
 }
 
 export default function RootLayout({
@@ -23,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="font-sans">
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Navbar />

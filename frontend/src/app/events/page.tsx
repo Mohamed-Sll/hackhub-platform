@@ -1,8 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Calendar } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Search, CalendarDays } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EventCard } from '@/components/shared/event-card'
 import { LoadingState } from '@/components/ui/loading-state'
@@ -12,12 +11,20 @@ import { Button } from '@/components/ui/button'
 import { useEvents } from '@/hooks/useEvents'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function EventsPage() {
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
+  const router = useRouter()
   const { user } = useAuth()
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setSearch(searchInput.trim()), 250)
+    return () => window.clearTimeout(timeoutId)
+  }, [searchInput])
 
   const params: Record<string, unknown> = {
     page,
@@ -29,48 +36,52 @@ export default function EventsPage() {
   const { data, isLoading, error, refetch } = useEvents(params)
 
   const events = data?.items || []
-  const totalPages = data?.page || 1
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.size)) : 1
+  const canCreateEvent = user?.role === 'organizer' || user?.role === 'admin'
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 sm:py-14">
+      <div className="mx-auto max-w-[1380px] px-5 sm:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="mb-9 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-3xl font-bold">Events</h1>
-              <p className="text-muted-foreground mt-1">Browse and join hackathons</p>
+              <p className="eyebrow">Find your next build</p>
+              <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Events</h1>
+              <p className="mt-2 text-muted-foreground">Browse public hackathons and follow their progress.</p>
             </div>
-            {user?.role === 'organizer' || user?.role === 'admin' ? (
+            {canCreateEvent ? (
               <Link href="/dashboard/events">
                 <Button>
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <CalendarDays className="mr-2 h-4 w-4" />
                   Create Event
                 </Button>
               </Link>
             ) : null}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
+          <div className="mb-6 flex flex-col gap-4 border-y border-border py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
+                type="search"
+                aria-label="Search events"
                 className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Search events..."
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                value={searchInput}
+                onChange={(e) => { setSearchInput(e.target.value); setPage(1) }}
               />
             </div>
           </div>
 
           <Tabs value={status} onValueChange={(v) => { setStatus(v); setPage(1) }} className="mb-6">
             <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Past</TabsTrigger>
+              <TabsTrigger value="all">All events</TabsTrigger>
+              <TabsTrigger value="published">Open</TabsTrigger>
+              <TabsTrigger value="in_progress">In progress</TabsTrigger>
+              <TabsTrigger value="closed">Completed</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -94,10 +105,10 @@ export default function EventsPage() {
             />
           ) : events.length === 0 ? (
             <EmptyState
-              icon={<Calendar className="h-16 w-16" />}
+              icon={<CalendarDays className="h-16 w-16" />}
               title="No events found"
               description={search ? "Try a different search term" : "No events are available right now"}
-              action={user ? undefined : { label: 'Create Event', onClick: () => window.location.href = '/dashboard/events' }}
+              action={canCreateEvent ? { label: 'Create Event', onClick: () => router.push('/dashboard/events') } : undefined}
             />
           ) : (
             <>
