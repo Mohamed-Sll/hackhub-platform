@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none" role="img" aria-labelledby="title">
+  <title id="title">HackHub</title>
+  <defs>
+    <linearGradient id="background" x1="12" y1="8" x2="108" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242044"/>
+      <stop offset="1" stop-color="#111126"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="26" y1="24" x2="91" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C4B5FD"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="112" height="112" rx="32" fill="url(#background)"/>
+  <rect x="4.5" y="4.5" width="111" height="111" rx="31.5" stroke="#C4B5FD" stroke-opacity=".16"/>
+  <path d="M29 29h15v24h32V29h15v62H76V66H44v25H29V29Z" fill="url(#mark)"/>
+  <circle cx="91" cy="29" r="9" fill="#D9F99D"/>
+  <circle cx="97" cy="93" r="3" fill="#D9F99D" fill-opacity=".8"/>
+</svg>
