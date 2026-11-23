@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Edit2, Github, Linkedin, Globe, Mail, MapPin, GraduationCap, BookOpen, Award } from 'lucide-react'
+import { Edit2, Code2, BriefcaseBusiness, Globe, Mail, MapPin, GraduationCap, BookOpen, Award } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -173,14 +173,14 @@ export default function ProfilePage() {
                   {user.github_url && (
                     <a href={user.github_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      <Github className="h-5 w-5" />
+                      <Code2 className="h-5 w-5" />
                       GitHub
                     </a>
                   )}
                   {user.linkedin_url && (
                     <a href={user.linkedin_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      <Linkedin className="h-5 w-5" />
+                      <BriefcaseBusiness className="h-5 w-5" />
                       LinkedIn
                     </a>
                   )}

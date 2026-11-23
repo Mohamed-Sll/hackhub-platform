@@ -19,9 +19,11 @@ Hashes bcrypt legados continuam verificaveis e sao re-hashed no proximo login.
    A sessao e confirmada na base antes de os cookies serem emitidos, tanto no
    login como na rotacao por refresh.
 4. Cookies sao `Secure` fora de `development` e `test`.
-5. O frontend chama `/auth/me` para carregar o utilizador.
+5. O frontend chama `/auth/me` para carregar o utilizador. Se o access token
+   tiver expirado, essa chamada tambem pode iniciar a renovacao.
 6. Num `401`, o interceptor coordena uma chamada a `/auth/refresh` e repete os
-   requests pendentes.
+   requests pendentes uma vez. Uma verificacao inicial de `/auth/me` que nao
+   consiga renovar termina como sessao ausente, sem forcar redirecionamento.
 7. Refresh valido roda ambos os tokens e substitui o hash armazenado. Reuso de
    um refresh anterior revoga a sessao inteira.
 8. `POST /auth/logout` revoga a sessao e remove ambos os cookies.

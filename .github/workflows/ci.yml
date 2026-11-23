@@ -55,7 +55,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./migration-test.db
           REDIS_URL: ""
-          SECRET_KEY: test-secret-key
+          SECRET_KEY: hackhub-ci-test-secret-key-with-at-least-32-characters
         run: |
           alembic upgrade head
           alembic check
@@ -63,7 +63,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./test.db
           REDIS_URL: ""
-          SECRET_KEY: test-secret-key
+          SECRET_KEY: hackhub-ci-test-secret-key-with-at-least-32-characters
         run: |
           pytest tests/ -v --cov=app --cov-report=term-missing
 

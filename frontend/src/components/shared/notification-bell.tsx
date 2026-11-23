@@ -36,8 +36,12 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <button
+        type="button"
+        aria-label={unreadCount && unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-expanded={isOpen}
+        aria-controls="notification-panel"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-accent transition-colors"
+        className="relative rounded-lg p-2 transition-colors hover:bg-accent focus-visible:outline-none"
       >
         <Bell className="h-5 w-5" />
         {unreadCount && unreadCount > 0 ? (
@@ -55,6 +59,9 @@ export function NotificationBell() {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
+              id="notification-panel"
+              role="dialog"
+              aria-label="Notifications"
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}

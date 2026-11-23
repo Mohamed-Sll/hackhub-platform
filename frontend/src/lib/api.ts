@@ -41,7 +41,7 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/me') {
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -57,7 +57,11 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError)
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth/')) {
+        if (
+          originalRequest.url !== '/auth/me' &&
+          typeof window !== 'undefined' &&
+          !window.location.pathname.startsWith('/auth/')
+        ) {
           // This interceptor runs outside React, so a Next router instance is unavailable.
           // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.assign(`${window.location.origin}/auth/login`)
@@ -221,9 +225,24 @@ const apiClient = {
     ask: (eventId: string, data: AIAskRequest) =>
       api.post<{ answer: string }>(`/ai/events/${eventId}/ask`, data).then((r) => r.data),
     evaluateProject: (projectId: string) =>
-      api.post<{ scores: Record<string, number>; feedback: string }>(`/ai/evaluate/${projectId}`).then((r) => r.data),
+      api.post<{ feedback: string }>(`/ai/evaluate/${projectId}`).then((r) => r.data),
     suggestTeams: (eventId: string) =>
-      api.post<{ suggestions: { members: string[]; combined_skills: string[] }[] }>(`/ai/events/${eventId}/suggest-teams`).then((r) => r.data),
+      api.post<{
+        suggestions: {
+          members: {
+            user_id: string
+            username: string
+            full_name: string
+            skills: string[]
+            languages: string[]
+            frameworks: string[]
+            experience_level: string | null
+            score: number
+          }[]
+          combined_skills: string[]
+          average_score: number
+        }[]
+      }>(`/ai/events/${eventId}/suggest-teams`).then((r) => r.data),
   },
 
   dashboard: {

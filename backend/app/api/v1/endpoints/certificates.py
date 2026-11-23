@@ -61,6 +61,7 @@ async def download_certificate_pdf(
     certificate = await service.get_certificate(certificate_id)
     if current_user.role != UserRole.ADMIN and certificate.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    await service.verify_certificate(certificate.verification_code)
     extra = certificate.extra_data or {}
     user_name = str(extra.get("user_name", "Participant"))
     event_title = str(extra.get("event_title", "Hackathon"))

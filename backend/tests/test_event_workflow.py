@@ -1,11 +1,16 @@
+import hashlib
 from datetime import datetime, timedelta, timezone
+from uuid import UUID
 
 import pytest
+
+from app.models.certificate import Certificate
 
 
 @pytest.mark.asyncio
 async def test_team_project_evaluation_ranking_and_certificates(
     client,
+    db_session,
     admin_headers,
     auth_headers,
     judge_headers,
@@ -116,6 +121,22 @@ async def test_team_project_evaluation_ranking_and_certificates(
     certificate = certificates.json()[0]
     verification = await client.get(f"/api/v1/certificates/verify/{certificate['verification_code']}")
     assert verification.status_code == 200
+
+    certificate_record = await db_session.get(Certificate, UUID(certificate["id"]))
+    assert certificate_record is not None
+    certificate_record.extra_data = {**certificate_record.extra_data, "event_title": "Tampered event"}
+    await db_session.flush()
+    tampered_verification = await client.get(f"/api/v1/certificates/verify/{certificate['verification_code']}")
+    assert tampered_verification.status_code == 404
+
+    legacy_signature_data = (
+        f"{certificate_record.user_id}-{certificate_record.event_id}-"
+        f"{certificate_record.type.value}-{certificate_record.verification_code}"
+    )
+    certificate_record.digital_signature = hashlib.sha256(legacy_signature_data.encode()).hexdigest()
+    await db_session.flush()
+    legacy_verification = await client.get(f"/api/v1/certificates/verify/{certificate['verification_code']}")
+    assert legacy_verification.status_code == 200
 
     download = await client.get(f"/api/v1/certificates/download/{certificate['id']}", headers=auth_headers)
     assert download.status_code == 200

@@ -1,6 +1,8 @@
 import base64
 import hashlib
+import hmac
 import io
+import json
 from typing import Optional
 from uuid import UUID
 
@@ -16,6 +18,31 @@ from app.repositories.base import BaseRepository
 from app.repositories.event_repository import EventRepository
 from app.repositories.user_repository import UserRepository
 from app.utils.helpers import generate_unique_code
+
+
+def _certificate_signature(
+    user_id: UUID,
+    event_id: UUID,
+    cert_type: CertificateType,
+    verification_code: str,
+    extra_data: dict,
+    qr_code_url: str,
+) -> str:
+    payload = json.dumps(
+        {
+            "user_id": str(user_id),
+            "event_id": str(event_id),
+            "type": cert_type.value,
+            "verification_code": verification_code,
+            "extra_data": extra_data,
+            "qr_code_url": qr_code_url,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    digest = hmac.new(settings.SECRET_KEY.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return f"hmac-sha256:{digest}"
 
 
 class CertificateService:
@@ -44,15 +71,20 @@ class CertificateService:
         while await self.db.scalar(select(Certificate).where(Certificate.verification_code == verification_code)):
             verification_code = generate_unique_code(16)
 
-        signature_data = f"{user_id}-{event_id}-{cert_type.value}-{verification_code}"
-        digital_signature = hashlib.sha256(signature_data.encode()).hexdigest()
-
+        extra_data = {
+            "user_name": user.full_name or user.username,
+            "event_title": event.title,
+            "event_date": event.start_date.isoformat() if event.start_date else None,
+        }
         qr_data = f"{settings.APP_URL.rstrip('/')}/certificates/verify/{verification_code}"
         qr_img = qrcode.make(qr_data)
         qr_buffer = io.BytesIO()
         qr_img.save(qr_buffer, format="PNG")
         qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode()
         qr_code_url = f"data:image/png;base64,{qr_base64}"
+        digital_signature = _certificate_signature(
+            user_id, event_id, cert_type, verification_code, extra_data, qr_code_url
+        )
 
         certificate = await self.cert_repo.create(
             user_id=user_id,
@@ -62,11 +94,7 @@ class CertificateService:
             qr_code_url=qr_code_url,
             verification_code=verification_code,
             digital_signature=digital_signature,
-            extra_data={
-                "user_name": user.full_name or user.username,
-                "event_title": event.title,
-                "event_date": event.start_date.isoformat() if event.start_date else None,
-            },
+            extra_data=extra_data,
         )
 
         return certificate
@@ -81,10 +109,24 @@ class CertificateService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Certificate not found or invalid verification code",
             )
-        expected_signature = hashlib.sha256(
-            f"{certificate.user_id}-{certificate.event_id}-{certificate.type.value}-{verification_code}".encode()
-        ).hexdigest()
-        if certificate.digital_signature != expected_signature:
+        signature = certificate.digital_signature or ""
+        if signature.startswith("hmac-sha256:"):
+            expected_signature = _certificate_signature(
+                certificate.user_id,
+                certificate.event_id,
+                certificate.type,
+                verification_code,
+                certificate.extra_data or {},
+                certificate.qr_code_url or "",
+            )
+            is_valid = hmac.compare_digest(signature, expected_signature)
+        else:
+            # Preserve verification for certificates issued before keyed signatures.
+            legacy_signature = hashlib.sha256(
+                f"{certificate.user_id}-{certificate.event_id}-{certificate.type.value}-{verification_code}".encode()
+            ).hexdigest()
+            is_valid = hmac.compare_digest(signature, legacy_signature)
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Certificate not found or invalid verification code",
