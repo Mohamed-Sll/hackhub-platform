@@ -4,7 +4,7 @@
   <p><strong>Open-source hackathon management, from the first event draft to verified certificates.</strong></p>
 
   <p>
-    <a href="https://github.com/mohamedsillahhh-cloud/hackhub-platform/actions/workflows/ci.yml"><img src="https://github.com/mohamedsillahhh-cloud/hackhub-platform/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+    <a href="https://github.com/Mohamed-Sll/hackhub-platform/actions/workflows/ci.yml"><img src="https://github.com/Mohamed-Sll/hackhub-platform/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-8B5CF6.svg" alt="MIT License" /></a>
     <img src="https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white" alt="Python 3.12" />
     <img src="https://img.shields.io/badge/Next.js-16-111827.svg?logo=nextdotjs&logoColor=white" alt="Next.js 16" />
@@ -19,6 +19,12 @@
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
 </div>
+
+<p align="center"><a href="https://frontend-h89wzeqpo-mohamedsillahhh-clouds-projects.vercel.app"><strong>Open the live preview</strong></a></p>
+
+The hosted preview contains the Next.js frontend only. The FastAPI backend and
+SQLite database are not hosted, so data and account workflows require running
+the project locally as described below.
 
 HackHub is a full-stack platform for running hackathons and innovation
 challenges. Organizers manage events, teams, challenges, judging, and results
@@ -71,7 +77,7 @@ For a quick, copyable list of the technologies used in HackHub, see
 ### Run locally
 
 ```bash
-git clone https://github.com/mohamedsillahhh-cloud/hackhub-platform.git
+git clone https://github.com/Mohamed-Sll/hackhub-platform.git
 cd hackhub-platform
 
 cp backend/.env.example backend/.env
