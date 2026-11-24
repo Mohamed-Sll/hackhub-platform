@@ -12,6 +12,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LocalizedText, useI18n } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 export default function EventsPage() {
   const { t } = useI18n()
@@ -21,6 +23,7 @@ export default function EventsPage() {
   const [page, setPage] = useState(1)
   const router = useRouter()
   const { user } = useAuth()
+  const isHostedPreview = useHostedPreview()
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setSearch(searchInput.trim()), 250)
@@ -31,7 +34,7 @@ export default function EventsPage() {
   if (search) params.search = search
   if (status !== 'all') params.status = status
 
-  const { data, isLoading, error, refetch } = useEvents(params)
+  const { data, isLoading, error, refetch } = useEvents(params, !isHostedPreview)
   const events = data?.items || []
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.size)) : 1
   const canCreateEvent = user?.role === 'organizer' || user?.role === 'admin'
@@ -49,7 +52,7 @@ export default function EventsPage() {
         ) : null}
       </div>
 
-      <div className="events-toolbar">
+      {!isHostedPreview && <div className="events-toolbar">
         <label className="events-search">
           <Search className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only"><LocalizedText text="Search events" /></span>
@@ -70,9 +73,11 @@ export default function EventsPage() {
           </TabsList>
         </Tabs>
         {data && <span className="events-total">{data.total} {t(data.total === 1 ? 'event' : 'events')}</span>}
-      </div>
+      </div>}
 
-      {isLoading ? (
+      {isHostedPreview ? (
+        <HostedPreviewNotice title="Event listings require the local backend" />
+      ) : isLoading ? (
         <div className="event-list" aria-label={t('Loading events')} aria-busy="true">
           {Array.from({ length: 5 }).map((_, index) => <div className="event-list-skeleton" key={index} />)}
         </div>

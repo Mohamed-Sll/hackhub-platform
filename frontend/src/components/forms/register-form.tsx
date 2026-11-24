@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 import { LocalizedText, translateCurrent } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -29,6 +31,7 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { register: registerUser, isRegistering } = useAuth()
+  const isHostedPreview = useHostedPreview()
 
   const {
     register,
@@ -46,6 +49,10 @@ export function RegisterForm() {
     } catch (error: any) {
       toast.error(translateCurrent(error?.response?.data?.detail || 'Registration failed. Please try again.'))
     }
+  }
+
+  if (isHostedPreview) {
+    return <HostedPreviewNotice title="Account creation is unavailable in this frontend preview" />
   }
 
   return (

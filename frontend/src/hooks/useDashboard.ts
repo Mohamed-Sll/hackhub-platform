@@ -10,10 +10,11 @@ function retryServerErrors(failureCount: number, error: Error) {
   return failureCount < 2
 }
 
-export function usePublicDashboardStats() {
+export function usePublicDashboardStats(enabled = true) {
   return useQuery({
     queryKey: ['dashboard', 'public-stats'],
     queryFn: () => apiClient.dashboard.getPublicStats(),
+    enabled,
     retry: retryServerErrors,
   })
 }

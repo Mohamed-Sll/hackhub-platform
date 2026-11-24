@@ -11,6 +11,8 @@ import { AuthLayout } from '@/components/layout/auth-layout'
 import { apiClient } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { LocalizedText, translateCurrent } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
@@ -19,6 +21,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {
+  const isHostedPreview = useHostedPreview()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -55,7 +58,9 @@ export default function ForgotPasswordPage() {
         ? 'Password links expire so someone else cannot use an old email.'
         : 'Keep your account secure and get back to the work that matters.'}
     >
-      {isSubmitted ? (
+      {isHostedPreview ? (
+        <HostedPreviewNotice title="Password recovery is unavailable in this frontend preview" />
+      ) : isSubmitted ? (
         <div className="auth-success" role="status">
           <CheckCircle className="h-9 w-9 text-green-600" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">

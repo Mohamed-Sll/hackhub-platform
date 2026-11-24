@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
 import type { CreateEventRequest } from '@/types'
 
-export function useEvents(filters?: Record<string, unknown>) {
+export function useEvents(filters?: Record<string, unknown>, enabled = true) {
   return useQuery({
     queryKey: ['events', filters],
     queryFn: () => apiClient.events.list(filters),
+    enabled,
   })
 }
 

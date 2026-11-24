@@ -9,6 +9,8 @@ import { usePublicDashboardStats } from '@/hooks/useDashboard'
 import { useEvents } from '@/hooks/useEvents'
 import type { Event as HackathonEvent } from '@/types'
 import { eventStatusText, LocalizedText, LocalizedDate, useI18n } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 // Distribuo as estrelas pelos três braços da galáxia.
 const GALAXY_STARS = Array.from({ length: 30 }, (_, index) => {
@@ -103,8 +105,12 @@ function EventRow({ event }: { event: HackathonEvent }) {
 
 export default function HomePage() {
   const { t } = useI18n()
-  const { data: stats } = usePublicDashboardStats()
-  const { data: eventData, isLoading, error, refetch } = useEvents({ page: 1, size: 3, status: 'published' })
+  const isHostedPreview = useHostedPreview()
+  const { data: stats } = usePublicDashboardStats(!isHostedPreview)
+  const { data: eventData, isLoading, error, refetch } = useEvents(
+    { page: 1, size: 3, status: 'published' },
+    !isHostedPreview,
+  )
   const events = eventData?.items ?? []
 
   return (
@@ -172,7 +178,9 @@ export default function HomePage() {
           <h2 id="coming-up-title"><LocalizedText text="Coming up" /></h2>
           <Link className="home-section-link" href="/events"><LocalizedText text="All events" />{' '}<MoveUpRight className="h-3 w-3" aria-hidden="true" /></Link>
         </div>
-        {isLoading ? (
+        {isHostedPreview ? (
+          <HostedPreviewNotice title="Upcoming events appear when the local backend is running" />
+        ) : isLoading ? (
           <div className="home-event-list" aria-label={t('Loading events')} aria-busy="true">
             {[0, 1, 2].map((row) => <div className="home-event-skeleton" key={row} />)}
           </div>

@@ -12,6 +12,8 @@ import { AuthLayout } from '@/components/layout/auth-layout'
 import { apiClient } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { LocalizedText, translateCurrent } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 const schema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(256),
@@ -24,6 +26,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function ResetPasswordPage() {
+  const isHostedPreview = useHostedPreview()
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter()
@@ -37,6 +40,14 @@ export default function ResetPasswordPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
+
+  if (isHostedPreview) {
+    return (
+      <AuthLayout eyebrow="Frontend preview" title="Password reset needs the local backend" description="The online preview does not have an account database.">
+        <HostedPreviewNotice title="Password recovery is unavailable in this frontend preview" />
+      </AuthLayout>
+    )
+  }
 
   const onSubmit = async (data: FormData) => {
     if (!token) {

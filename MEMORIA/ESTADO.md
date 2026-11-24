@@ -41,6 +41,10 @@ backups, observabilidade externa e validacao de carga no ambiente de destino.
   de certificados.
 - Interface PT/EN com preferencia persistente, mensagens de erro/notificacao e
   datas localizadas; o tema escuro preto e o padrao e o tema claro esta disponivel.
+- O preview Vercel e apenas frontend: com `VERCEL_ENV=preview`, a aplicacao
+  nao inicia a sessao nem consulta API de eventos/metricas; mostra um aviso com
+  ligacao para executar o projeto localmente. Os fluxos com dados continuam a
+  funcionar na instalacao local.
 - Dialogos com scroll interno, foco inicial/contido e retorno ao controlo de
   origem; as abas de eventos podem deslocar-se dentro da area em ecras estreitos.
 

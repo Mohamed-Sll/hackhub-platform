@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { Sidebar } from '@/components/layout/sidebar'
 import { ToastProvider } from '@/components/ui/toast'
+import { HostedPreviewBanner } from '@/components/layout/hosted-preview'
 
 export const metadata: Metadata = {
   title: {
@@ -19,14 +20,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const isHostedPreview = process.env.VERCEL_ENV === 'preview'
+
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="font-sans">
-        <Providers>
+        <Providers isHostedPreview={isHostedPreview}>
           <div className="app-shell">
             <Sidebar />
             <div className="app-main">
               <Navbar />
+              <HostedPreviewBanner />
               <main className="app-content">{children}</main>
               <Footer />
             </div>

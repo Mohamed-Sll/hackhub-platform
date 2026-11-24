@@ -9,15 +9,26 @@ import { Button } from '@/components/ui/button'
 import { AuthLayout } from '@/components/layout/auth-layout'
 import { apiClient } from '@/lib/api'
 import { LocalizedText } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 export default function VerifyEmailPage() {
+  const isHostedPreview = useHostedPreview()
   const token = useSearchParams().get('token')
   const verification = useQuery({
     queryKey: ['verify-email', token],
     queryFn: () => apiClient.auth.verifyEmail(token as string),
-    enabled: Boolean(token),
+    enabled: Boolean(token) && !isHostedPreview,
     retry: false,
   })
+
+  if (isHostedPreview) {
+    return (
+      <AuthLayout eyebrow="Frontend preview" title="Email verification needs the local backend" description="The online preview does not have an account database.">
+        <HostedPreviewNotice title="Email verification is unavailable in this frontend preview" />
+      </AuthLayout>
+    )
+  }
 
   const isInvalid = !token || verification.isError
 

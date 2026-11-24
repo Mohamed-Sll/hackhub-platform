@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 import { LocalizedText, translateCurrent, useI18n } from '@/lib/i18n'
+import { HostedPreviewNotice } from '@/components/layout/hosted-preview'
+import { useHostedPreview } from '@/components/layout/providers'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -24,6 +26,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const { t } = useI18n()
   const { login, isLoggingIn } = useAuth()
+  const isHostedPreview = useHostedPreview()
 
   const {
     register,
@@ -42,6 +45,10 @@ export function LoginForm() {
     } catch (error: any) {
       toast.error(translateCurrent(error?.response?.data?.detail || 'Login failed. Please try again.'))
     }
+  }
+
+  if (isHostedPreview) {
+    return <HostedPreviewNotice title="Sign-in is unavailable in this frontend preview" />
   }
 
   return (

@@ -20,7 +20,7 @@
   </p>
 </div>
 
-<p align="center"><a href="https://frontend-h89wzeqpo-mohamedsillahhh-clouds-projects.vercel.app"><strong>Open the live preview</strong></a></p>
+<p align="center"><a href="https://frontend-40uspsv0q-mohamedsillahhh-clouds-projects.vercel.app"><strong>Open the live preview</strong></a></p>
 
 The hosted preview contains the Next.js frontend only. The FastAPI backend and
 SQLite database are not hosted, so data and account workflows require running

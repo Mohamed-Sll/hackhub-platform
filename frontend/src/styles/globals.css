@@ -147,6 +147,15 @@
 
   .app-main { min-width: 0; display: flex; flex-direction: column; }
 
+  .hosted-preview-banner { display: flex; align-items: flex-start; gap: 10px; margin: 12px 24px 0; padding: 12px 15px; border: 1px solid hsl(var(--signal-blue) / .38); border-radius: 12px; background: hsl(var(--signal-blue) / .07); color: hsl(var(--foreground)); }
+  .hosted-preview-banner > svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; color: hsl(var(--signal-blue)); }
+  .hosted-preview-banner p { margin: 0; font-size: 12px; line-height: 1.6; }
+  .hosted-preview-banner a, .hosted-preview-notice a { color: hsl(var(--primary)); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+  .hosted-preview-notice { display: flex; align-items: flex-start; gap: 13px; max-width: 720px; margin: 8px auto; padding: 22px; border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card)); }
+  .hosted-preview-notice > svg { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px; color: hsl(var(--signal-blue)); }
+  .hosted-preview-notice h2 { margin: 0 0 7px; font-size: 15px; font-weight: 680; }
+  .hosted-preview-notice p { margin: 0 0 10px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+
   .app-content {
     width: min(100%, 1220px);
     margin-inline: auto;
@@ -498,6 +507,7 @@
   .desktop-sign-in, .account-name { display: none; }
   .theme-toggle span { display: none; }
   .app-content { width: calc(100% - 30px); padding-block: 28px 42px; }
+  .hosted-preview-banner { margin-inline: 15px; }
   .hero-home { min-height: 0; grid-template-columns: 1fr; gap: 20px; padding: 24px; }
   .hero-home h1 { font-size: clamp(48px, 13vw, 68px); }
   .home-orbit { width: min(68vw, 280px); }
@@ -565,6 +575,7 @@ button:active, [role="button"]:active { transform: none !important; }
   .language-switch { gap: 0; padding: 2px; }
   .language-switch button { min-width: 25px; padding-inline: 4px; }
   .app-content { width: calc(100% - 24px); }
+  .hosted-preview-banner { margin-inline: 12px; }
   .hero-home { padding: 19px; }
   .hero-actions { display: grid; grid-template-columns: 1fr; }
   .hero-actions > * { width: 100%; }
