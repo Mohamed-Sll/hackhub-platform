@@ -18,3 +18,11 @@ class CertificateResponse(BaseModel):
     extra_data: Optional[Any] = None
 
     model_config = {"from_attributes": True}
+
+
+class CertificateVerificationResponse(BaseModel):
+    verification_code: str
+    type: str
+    recipient_name: str
+    event_title: str
+    issued_at: datetime

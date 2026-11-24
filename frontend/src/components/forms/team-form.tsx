@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { CreateTeamRequest } from '@/types'
+import { LocalizedText } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
 
 const teamSchema = z.object({
   name: z.string().min(3, 'Team name must be at least 3 characters'),
@@ -20,6 +22,7 @@ interface TeamFormProps {
 }
 
 export function TeamForm({ eventId, onSubmit, isLoading }: TeamFormProps) {
+  const { t } = useI18n()
   const {
     register,
     handleSubmit,
@@ -41,19 +44,19 @@ export function TeamForm({ eventId, onSubmit, isLoading }: TeamFormProps) {
         {...register('name')}
       />
       <div className="space-y-1">
-        <label className="text-sm font-medium">Description (optional)</label>
+        <label htmlFor="team-description" className="text-sm font-medium"><LocalizedText text="Description (optional)" /></label>
         <textarea
+          id="team-description"
           className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          placeholder="Describe your team..."
+          placeholder={t('Describe your team...')}
           {...register('description')}
         />
         {errors.description && (
-          <p className="text-sm text-destructive">{errors.description.message}</p>
+          <p className="text-sm text-destructive" role="alert">{t(errors.description.message || '')}</p>
         )}
       </div>
       <Button type="submit" className="w-full" loading={isLoading}>
-        Create Team
-      </Button>
+        <LocalizedText text="Create Team" />{' '}</Button>
     </form>
   )
 }

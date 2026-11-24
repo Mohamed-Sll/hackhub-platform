@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import type { CreateProjectRequest } from '@/types'
+import { LocalizedText, useI18n } from '@/lib/i18n'
 
 const projectSchema = z.object({
   name: z.string().min(3, 'Project name must be at least 3 characters'),
@@ -29,6 +30,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ teamId, eventId, challengeId, initialData, onSubmit, isLoading }: ProjectFormProps) {
+  const { t } = useI18n()
   const [techStack, setTechStack] = useState<string[]>(initialData?.tech_stack || [])
   const [techInput, setTechInput] = useState('')
 
@@ -79,14 +81,15 @@ export function ProjectForm({ teamId, eventId, challengeId, initialData, onSubmi
         {...register('name')}
       />
       <div className="space-y-1">
-        <label className="text-sm font-medium">Description</label>
+        <label htmlFor="project-description" className="text-sm font-medium"><LocalizedText text="Description" /></label>
         <textarea
+          id="project-description"
           className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          placeholder="Describe your project..."
+          placeholder={t('Describe your project...')}
           {...register('description')}
         />
         {errors.description && (
-          <p className="text-sm text-destructive">{errors.description.message}</p>
+          <p className="text-sm text-destructive" role="alert">{t(errors.description.message || '')}</p>
         )}
       </div>
       <Input
@@ -108,11 +111,12 @@ export function ProjectForm({ teamId, eventId, challengeId, initialData, onSubmi
         {...register('presentation_url')}
       />
       <div className="space-y-1">
-        <label className="text-sm font-medium">Tech Stack</label>
+        <label htmlFor="project-tech-stack" className="text-sm font-medium"><LocalizedText text="Tech Stack" /></label>
         <div className="flex gap-2">
           <input
+            id="project-tech-stack"
             className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            placeholder="Add a technology..."
+            placeholder={t('Add a technology...')}
             value={techInput}
             onChange={(e) => setTechInput(e.target.value)}
             onKeyDown={(e) => {
@@ -123,8 +127,7 @@ export function ProjectForm({ teamId, eventId, challengeId, initialData, onSubmi
             }}
           />
           <Button type="button" variant="outline" onClick={addTech}>
-            Add
-          </Button>
+            <LocalizedText text="Add" />{' '}</Button>
         </div>
         {techStack.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -144,7 +147,7 @@ export function ProjectForm({ teamId, eventId, challengeId, initialData, onSubmi
         )}
       </div>
       <Button type="submit" className="w-full" loading={isLoading}>
-        {initialData ? 'Update Project' : 'Create Project'}
+        {t(initialData ? 'Update Project' : 'Create Project')}
       </Button>
     </form>
   )

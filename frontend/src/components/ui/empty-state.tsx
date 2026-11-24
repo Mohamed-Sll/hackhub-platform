@@ -1,7 +1,9 @@
+'use client'
 import { cn } from '@/lib/utils'
 import { Inbox } from 'lucide-react'
 import { Button } from './button'
 import { motion } from 'framer-motion'
+import { useI18n } from '@/lib/i18n'
 
 interface EmptyStateProps {
   icon?: React.ReactNode
@@ -15,6 +17,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+  const { t } = useI18n()
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -27,12 +30,12 @@ export function EmptyState({ icon, title, description, action, className }: Empt
       <div className="text-muted-foreground mb-4">
         {icon || <Inbox className="h-16 w-16" />}
       </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold mb-2">{t(title)}</h3>
       {description && (
-        <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
+        <p className="text-sm text-muted-foreground max-w-md mb-6">{t(description)}</p>
       )}
       {action && (
-        <Button onClick={action.onClick}>{action.label}</Button>
+        <Button onClick={action.onClick}>{t(action.label)}</Button>
       )}
     </motion.div>
   )

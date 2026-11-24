@@ -57,9 +57,15 @@ class EventRepository(BaseRepository[Event]):
         start_date_from: Optional[datetime] = None,
         start_date_to: Optional[datetime] = None,
         organizer_id: Optional[UUID] = None,
+        public_only: bool = False,
     ) -> Tuple[List[Event], int]:
         query = select(Event)
         count_query = select(func.count(Event.id))
+
+        if public_only:
+            visible_statuses = (EventStatus.PUBLISHED, EventStatus.IN_PROGRESS, EventStatus.CLOSED)
+            query = query.where(Event.status.in_(visible_statuses))
+            count_query = count_query.where(Event.status.in_(visible_statuses))
 
         if status:
             query = query.where(Event.status == status)

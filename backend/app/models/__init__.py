@@ -3,6 +3,7 @@ from app.models.certificate import Certificate, CertificateType
 from app.models.challenge import Challenge, ChallengeCategory, Criterion
 from app.models.evaluation import Evaluation, EvaluationScore
 from app.models.event import Event, EventStatus
+from app.models.event_registration import EventRegistration
 from app.models.notification import Notification, NotificationCategory, NotificationType
 from app.models.organization import Organization, OrganizationPlan
 from app.models.project import Project, ProjectStatus, ProjectTechnology
@@ -15,6 +16,7 @@ __all__ = [
     "UserRole",
     "Event",
     "EventStatus",
+    "EventRegistration",
     "Team",
     "TeamMember",
     "MemberRole",

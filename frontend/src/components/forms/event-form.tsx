@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import type { CreateEventRequest } from '@/types'
+import { LocalizedText, useI18n } from '@/lib/i18n'
 
 const eventSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
@@ -31,6 +32,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onSubmit, isLoading }: EventFormProps) {
+  const { t } = useI18n()
   const {
     register,
     handleSubmit,
@@ -87,14 +89,16 @@ export function EventForm({ initialData, onSubmit, isLoading }: EventFormProps) 
         </div>
         <div className="md:col-span-2">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
+            <label htmlFor="event-description" className="text-sm font-medium"><LocalizedText text="Description" /></label>
             <textarea
+              id="event-description"
+              aria-invalid={Boolean(errors.description)}
               className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="Describe the event..."
+              placeholder={t('Describe the event...')}
               {...register('description')}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-sm text-destructive" role="alert">{t(errors.description.message || '')}</p>
             )}
           </div>
         </div>
@@ -120,10 +124,11 @@ export function EventForm({ initialData, onSubmit, isLoading }: EventFormProps) 
         />
         <div className="flex items-center gap-2 pt-6">
           <Switch
+            id="event-is-online"
             checked={isOnline}
             onCheckedChange={(checked) => setValue('is_online', checked)}
           />
-          <label className="text-sm font-medium">Online Event</label>
+          <label htmlFor="event-is-online" className="text-sm font-medium"><LocalizedText text="Online Event" /></label>
         </div>
         {!isOnline && (
           <Input
@@ -147,10 +152,11 @@ export function EventForm({ initialData, onSubmit, isLoading }: EventFormProps) 
         />
         <div className="md:col-span-2">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Prizes</label>
+            <label htmlFor="event-prizes" className="text-sm font-medium"><LocalizedText text="Prizes" /></label>
             <textarea
+              id="event-prizes"
               className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="Describe the prizes..."
+              placeholder={t('Describe the prizes...')}
               {...register('prizes')}
             />
           </div>
@@ -165,17 +171,18 @@ export function EventForm({ initialData, onSubmit, isLoading }: EventFormProps) 
         </div>
         <div className="md:col-span-2">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Regulations</label>
+            <label htmlFor="event-regulations" className="text-sm font-medium"><LocalizedText text="Regulations" /></label>
             <textarea
+              id="event-regulations"
               className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="Event regulations..."
+              placeholder={t('Event regulations...')}
               {...register('regulations')}
             />
           </div>
         </div>
       </div>
       <Button type="submit" loading={isLoading} className="w-full">
-        {initialData ? 'Update Event' : 'Create Event'}
+        {t(initialData ? 'Update Event' : 'Create Event')}
       </Button>
     </form>
   )

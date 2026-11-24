@@ -18,6 +18,14 @@ class EvaluationRepository(BaseRepository[Evaluation]):
         )
         return list(result.scalars().all())
 
+    async def get_by_project_and_judge(self, project_id: UUID, judge_id: UUID) -> List[Evaluation]:
+        result = await self.db.execute(
+            select(Evaluation)
+            .where(Evaluation.project_id == project_id, Evaluation.judge_id == judge_id)
+            .order_by(Evaluation.submitted_at.desc())
+        )
+        return list(result.scalars().all())
+
     async def get_by_judge(self, judge_id: UUID, event_id: Optional[UUID] = None) -> List[Evaluation]:
         query = select(Evaluation).where(Evaluation.judge_id == judge_id)
         if event_id:

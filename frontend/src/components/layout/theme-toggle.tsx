@@ -1,9 +1,10 @@
 'use client'
+
 import { useTheme } from 'next-themes'
 import { useSyncExternalStore } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Moon } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 const subscribe = () => () => undefined
 const getClientSnapshot = () => true
@@ -11,43 +12,27 @@ const getServerSnapshot = () => false
 
 export function ThemeToggle({ className }: { className?: string }) {
   const mounted = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot)
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
+  const { t } = useI18n()
 
   if (!mounted) {
-    return <div className={cn('h-9 w-9', className)} />
+    return <span className={cn('theme-toggle-placeholder', className)} aria-hidden="true" />
   }
+
+  const isDark = resolvedTheme === 'dark'
+  const nextTheme = isDark ? 'light' : 'dark'
+  const label = t(isDark ? 'Light theme' : 'Dark theme')
 
   return (
     <button
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className={cn(
-        'relative h-9 w-9 rounded-lg border border-input bg-background hover:bg-accent transition-colors flex items-center justify-center',
-        className
-      )}
+      type="button"
+      onClick={() => setTheme(nextTheme)}
+      className={cn('theme-toggle', className)}
+      aria-label={t(isDark ? 'Switch to light theme' : 'Switch to dark theme')}
+      title={t(isDark ? 'Switch to light theme' : 'Switch to dark theme')}
     >
-      <AnimatePresence mode="wait">
-        {theme === 'dark' ? (
-          <motion.div
-            key="moon"
-            initial={{ scale: 0, rotate: -90 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 90 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Moon className="h-4 w-4" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="sun"
-            initial={{ scale: 0, rotate: 90 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: -90 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Sun className="h-4 w-4" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isDark ? <Sun className="h-3.5 w-3.5" aria-hidden="true" /> : <Moon className="h-3.5 w-3.5" aria-hidden="true" />}
+      <span>{label}</span>
     </button>
   )
 }

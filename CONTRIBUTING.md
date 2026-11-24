@@ -1,286 +1,144 @@
 # Contributing to HackHub
 
-First off, thanks for taking the time to contribute! 🎉
+Thanks for considering a contribution. Issues, bug fixes, features, and
+documentation improvements are welcome. Please keep changes focused and
+describe the user or maintainer problem they solve.
 
-HackHub is an open-source hackathon management platform built with Next.js 16,
-FastAPI and SQLite. Redis is an optional cache. Every contribution — whether
-it's a bug fix, new feature, documentation improvement, or typo fix — is
-appreciated.
+## Development setup
 
----
+Requirements: Python 3.12+, Node.js 20+, and Git. Docker Compose and Redis are
+optional for local development.
 
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Local Setup](#local-setup)
-  - [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
-- [Development Workflow](#development-workflow)
-  - [Branching](#branching)
-  - [Commit Convention](#commit-convention)
-  - [Running Tests](#running-tests)
-  - [Code Style & Linting](#code-style--linting)
-- [How to Contribute](#how-to-contribute)
-  - [Reporting Bugs](#reporting-bugs)
-  - [Suggesting Features](#suggesting-features)
-  - [Opening a Pull Request](#opening-a-pull-request)
-- [Architecture & Design Decisions](#architecture--design-decisions)
-
----
-
-## Code of Conduct
-
-This project adheres to the [Contributor Covenant](https://www.contributor-covenant.org/). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainer.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.12+
-- Node.js 20+
-- Redis 7 (optional)
-- Docker & Docker Compose (optional, but recommended)
-
-### Local Setup
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/mohamedsillahhh-cloud/hackhub-platform.git
-   cd hackhub-platform
-   ```
-
-2. **Backend setup:**
-
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
-   pip install -r requirements-dev.txt
-   ```
-
-3. **Frontend setup:**
-
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-4. **Optional Redis cache (via Docker):**
-
-   ```bash
-   docker compose up -d redis
-   ```
-
-   Apply the current database schema before starting the backend:
-
-   ```bash
-   cd backend
-   alembic upgrade head
-   ```
-
-   Development may use `AUTO_CREATE_TABLES=true`; production must use
-   migrations with `AUTO_CREATE_TABLES=false`.
-
-5. **Start the development servers:**
-
-   ```bash
-   # Terminal 1 — backend
-   cd backend
-   uvicorn app.main:app --reload --port 8000
-
-   # Terminal 2 — frontend
-   cd frontend
-   npm run dev
-   ```
-
-   The API will be available at `http://localhost:8000` and the frontend at `http://localhost:3000`.
-
-### Environment Variables
-
-Copy `backend/.env.example` to `backend/.env` and
-`frontend/.env.example` to `frontend/.env.local`, then adjust:
-
-**Backend** (`backend/.env`):
-
-```env
-DATABASE_URL=sqlite+aiosqlite:///./hackhub.db
-REDIS_URL=redis://localhost:6379/0
-SECRET_KEY=your-secret-key-at-least-32-chars
-OPENAI_API_KEY=sk-...  # Optional, for AI features
-CORS_ORIGINS=http://localhost:3000
-ENVIRONMENT=development
-```
-
-**Frontend** (`frontend/.env.local`):
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
----
-
-## Project Structure
-
-```
-backend/app/
-├── api/v1/endpoints/     → Route handlers (one file per domain)
-├── core/                 → Config, security, DB session, dependencies
-├── models/               → SQLAlchemy ORM models
-├── schemas/              → Pydantic request/response DTOs
-├── services/             → Business logic layer
-├── repositories/         → Data access layer
-└── utils/                → Email, helpers, etc.
-
-frontend/src/
-├── app/                  → Next.js App Router pages
-├── components/           → Reusable UI components (shadcn/ui)
-├── hooks/                → TanStack Query hooks
-├── store/                → Zustand state management
-├── lib/                  → API client, utilities
-└── types/                → TypeScript type definitions
-```
-
----
-
-## Development Workflow
-
-### Branching
-
-- `main` — stable, release-ready
-- `feat/<name>` — new features
-- `fix/<name>` — bug fixes
-- `docs/<name>` — documentation only
-
-Always branch off `main` and open PRs targeting `main`.
-
-### Commit Convention
-
-We follow **Conventional Commits**:
-
-```
-<type>: <short description>
-
-[optional body]
-```
-
-Types:
-
-| Type       | Usage                                   |
-|------------|----------------------------------------|
-| `feat`     | A new feature                          |
-| `fix`      | A bug fix                              |
-| `refactor` | Code change that neither fixes nor adds |
-| `docs`     | Documentation only                      |
-| `style`    | Formatting, missing semicolons, etc.    |
-| `test`     | Adding or fixing tests                  |
-| `chore`    | Build, CI, dependencies                 |
-
-Examples:
-
-```
-feat: add team invitation via invite code
-fix: prevent duplicate certificate generation
-refactor: extract scoring logic into separate service
-docs: update API endpoint documentation
-```
-
-### Running Tests
+Clone the repository, then copy the example environment files:
 
 ```bash
-# Backend tests
-cd backend
-pytest                      # All tests
-pytest tests/unit           # Unit tests only
-pytest tests/integration    # Integration tests only
-pytest --cov=app            # With coverage report
+git clone https://github.com/mohamedsillahhh-cloud/hackhub-platform.git
+cd hackhub-platform
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+```
 
-# Frontend type checking
+In Windows PowerShell, use `Copy-Item backend/.env.example backend/.env` and
+`Copy-Item frontend/.env.example frontend/.env.local` for the copy commands.
+
+Create a Python environment and install backend development dependencies:
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux:        source .venv/bin/activate
+python -m pip install -r backend/requirements-dev.txt
+```
+
+Install frontend dependencies and prepare the database:
+
+```bash
 cd frontend
-npx tsc --noEmit
+npm ci
+cd ../backend
+alembic upgrade head
+python -m app.create_first_admin
 ```
 
-### Code Style & Linting
+This one-time command creates the initial administrator interactively. Do not
+use it to provision additional users after the first administrator exists.
 
-**Backend:**
-
-The project uses `black`, `isort`, and `flake8`. Run before committing:
+Start the API from `backend/`:
 
 ```bash
-cd backend
-isort app tests alembic --profile black
-black app tests alembic --line-length=120
+uvicorn app.main:app --reload --port 8000
+```
+
+In another terminal, start the web app from `frontend/`:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend runs at `http://localhost:3000`; the API runs at
+`http://localhost:8000`. Its interactive docs are at `/docs`. SQLite is the
+supported local database; Redis is optional. Email, Telegram, and OpenAI
+features need provider credentials.
+
+## Repository map
+
+```text
+backend/app/       API routes, domain services, persistence, auth, settings
+backend/alembic/   Versioned database migrations
+backend/tests/     API, workflow, security, and service tests
+frontend/src/      Pages, components, hooks, API client, and local state
+docs/              Architecture and technical overview
+MEMORIA/           Maintainer reference for domain flows and decisions
+```
+
+Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) before changing cross-cutting
+flows such as authentication, migrations, event lifecycle, or ranking.
+
+## Before opening a pull request
+
+1. Keep the change focused and explain its purpose in the pull request.
+2. Add or update backend tests for behavior changes and bug fixes.
+3. Update `.env.example` and documentation when configuration or behavior
+   changes.
+4. Add an Alembic migration for persistent schema changes; do not edit an
+   existing migration that may already have been applied.
+5. Run the relevant checks below and include their results in the PR.
+6. Never commit credentials, generated databases, local environment files, or
+   dependency folders.
+
+### Backend checks
+
+Run these from `backend/`:
+
+```bash
+pytest -q
+alembic upgrade head
+alembic check
+black --check app tests alembic --line-length=120
+isort --check-only app tests alembic --profile black
 flake8 app tests alembic --max-line-length=120 --extend-ignore=E203,W503
+pip-audit -r requirements-dev.txt
 ```
 
-**Frontend:**
+### Frontend checks
+
+Run these from `frontend/`:
 
 ```bash
-cd frontend
 npm run lint
+npm run typecheck
+npm run build
+npm audit --omit=dev --audit-level=high
+npx playwright install chromium # once per machine
+npm run test:e2e
 ```
 
-TypeScript strict mode is enabled. Run `npx tsc --noEmit` to verify.
+The browser suite runs against the local Next.js server and intercepts API
+requests with test fixtures. It covers public event registration, organizer
+event creation, changing an active participant session, joining a team by code,
+and the documented local password recovery path.
 
----
+The one-time administrator setup command refuses to create a second admin.
+Public registration does not create an account; accounts remain for the
+existing team, judging, and profile workflows.
 
-## How to Contribute
+The GitHub Actions workflow also builds both Docker images. Run
+`bash scripts/check-memoria.sh` from the repository root if you change
+maintainer memory files.
 
-### Reporting Bugs
+## Pull request guidance
 
-Open a [GitHub Issue](https://github.com/mohamedsillahhh-cloud/hackhub-platform/issues) with:
+- Use a concise title that explains the change. Conventional Commit prefixes
+  such as `feat:`, `fix:`, `docs:`, and `chore:` are welcome.
+- Include context, the implementation summary, and verification performed.
+- Link a related issue when one exists.
+- Include screenshots for visible frontend changes.
+- Call out configuration changes, migrations, and operational impact.
 
-- A clear, descriptive title
-- Steps to reproduce (include code/screenshots if applicable)
-- Expected vs actual behaviour
-- Environment details (OS, browser, Python/Node versions)
+## Scope and review
 
-### Suggesting Features
-
-Open a [GitHub Issue](https://github.com/mohamedsillahhh-cloud/hackhub-platform/issues) with:
-
-- A clear, descriptive title prefixed with `[Feature]`
-- Use case and motivation
-- Proposed solution (optional)
-
-### Opening a Pull Request
-
-1. **Find or create an issue** — comment to let others know you're working on it.
-2. **Fork the repository** and create your branch from `main`.
-3. **Write clean code** following the project's conventions (Clean Architecture, async/await, typed).
-4. **Add tests** for new functionality. Bug fixes should include a test that reproduces the bug.
-5. **Ensure CI passes** — run the full test suite and linters.
-6. **Keep PRs focused** — one feature/fix per PR. Large changes should be discussed first.
-7. **Write a descriptive PR title** following the commit convention (e.g., `feat: add team invitation via invite code`).
-8. **Reference the issue** in the PR description using `Closes #123`.
-
-PR checklist before submitting:
-
-- [ ] Code follows existing style and architecture
-- [ ] Tests pass (`pytest` + `npx tsc --noEmit`)
-- [ ] Linting passes (`black`, `isort`, `flake8`, `npm run lint`)
-- [ ] New endpoints have Pydantic `response_model`
-- [ ] Persistent schema changes include an Alembic revision
-- [ ] Environment variables have defaults and are documented in `.env.example`
-- [ ] Frontend hooks follow TanStack Query patterns
-- [ ] No `console.log`, debug code, or commented-out code
-
----
-
-## Architecture & Design Decisions
-
-- **Clean Architecture**: endpoints → services → repositories. Services contain business logic, repositories handle data access. Endpoints are thin.
-- **Async everywhere**: Python uses `async/await` with SQLAlchemy 2.0's async session.
-- **JWT via httpOnly cookies**: tokens are never exposed to JavaScript. The `access_token` cookie is sent with every request automatically.
-- **Rate limiting**: AI endpoints use request-address limits. Daily token caps
-  are tracked per user when Redis is available.
-- **File structure**: one file per domain in `endpoints/`, `services/`, and (if needed) `repositories/`. Models and schemas are similarly split.
-- **Frontend state**: Zustand for auth (cookie-driven, no token in JS), TanStack Query for all server state.
-
----
-
-*Developed by [Mohamed Sillah](https://github.com/mohamedsillahhh-cloud)*
+Please avoid unrelated refactors in focused changes. For larger features,
+open an issue first to discuss the intended behavior and constraints. Maintainers
+review contributions for correctness, security, accessibility, and consistency
+with the documented project boundaries.

@@ -1,15 +1,17 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ChevronDown, LogOut, User, Users, Bell, LayoutDashboard } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Menu, User, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ThemeToggle } from './theme-toggle'
 import { useAuth } from '@/hooks/useAuth'
 import { NotificationBell } from '@/components/shared/notification-bell'
+import { useI18n, LocalizedText } from '@/lib/i18n'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,212 +21,136 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/events', label: 'Events' },
-  { href: '/dashboard', label: 'Dashboard' },
-]
+const pageLabels: Record<string, string> = {
+  '/': 'Home',
+  '/events': 'Discover events',
+  '/dashboard': 'Organizer overview',
+  '/dashboard/events': 'Manage events',
+  '/dashboard/certificates': 'Certificates',
+  '/teams': 'My teams',
+  '/profile': 'Profile',
+  '/auth/login': 'Sign in',
+  '/auth/register': 'Create account',
+  '/auth/forgot-password': 'Forgot password',
+  '/auth/reset-password': 'Reset password',
+  '/auth/verify-email': 'Verify email',
+}
+
+function getPageLabel(pathname: string) {
+  if (pageLabels[pathname]) return pageLabels[pathname]
+  if (pathname.startsWith('/dashboard/events/')) return 'Event workspace'
+  if (pathname.startsWith('/events/')) return pathname.endsWith('/register') ? 'Event registration' : 'Event details'
+  if (pathname.startsWith('/teams/')) return 'Team workspace'
+  if (pathname.startsWith('/certificates/verify/')) return 'Verify certificate'
+  return 'HackHub'
+}
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
-  const [mobileMenu, setMobileMenu] = useState({ open: false, pathname })
-  const isMobileMenuOpen = mobileMenu.open && mobileMenu.pathname === pathname
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const { user, isAuthenticated, logout } = useAuth()
+  const { locale, setLocale, t } = useI18n()
+  const canManage = user?.role === 'organizer' || user?.role === 'admin'
+  const label = t(getPageLabel(pathname))
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    if (!mobileMenuOpen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+        menuButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileMenuOpen])
+
+  const closeMobileMenu = () => setMobileMenuOpen(false)
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled
-          ? 'glass shadow-sm'
-          : 'bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
-            </div>
-            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
-              HackHub
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                  pathname === link.href
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <NotificationBell />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar_url} />
-                        <AvatarFallback>
-                          {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium max-w-[120px] truncate">
-                        {user?.full_name}
-                      </span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col">
-                        <span>{user?.full_name}</span>
-                        <span className="text-xs text-muted-foreground">{user?.email}</span>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/teams" className="cursor-pointer">
-                        <Users className="mr-2 h-4 w-4" />
-                        My Teams
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer">
-                        <Bell className="mr-2 h-4 w-4" />
-                        Notifications
-                      </Link>
-                    </DropdownMenuItem>
-                    {user?.role === 'organizer' || user?.role === 'admin' ? (
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard" className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => logout()}
-                      className="text-destructive cursor-pointer"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">Login</Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button size="sm">Register</Button>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
-            onClick={() => setMobileMenu({ open: !isMobileMenuOpen, pathname })}
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
+    <header className="app-topbar">
+      <div className="topbar-left">
+        <button
+          type="button"
+          ref={menuButtonRef}
+          aria-label={mobileMenuOpen ? t('Close navigation menu') : t('Open navigation menu')}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
+          className="mobile-nav-toggle"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </button>
+        <p className="breadcrumb"><Link className="breadcrumb-brand" href="/" aria-label={t('HackHub home')}><Image src="/icon.svg" alt="" width={18} height={18} aria-hidden="true" /><span>HackHub</span></Link><b aria-hidden="true"><LocalizedText text="/" /></b><strong>{label}</strong></p>
       </div>
 
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t"
-          >
-            <div className="px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'block px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                    pathname === link.href
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className="pt-2 border-t">
-                {isAuthenticated ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 px-4 py-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar_url} />
-                        <AvatarFallback>{user?.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{user?.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{user?.email}</p>
-                      </div>
-                    </div>
-                    <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-accent rounded-lg">
-                      Profile
-                    </Link>
-                    <Link href="/teams" className="block px-4 py-2 text-sm hover:bg-accent rounded-lg">
-                      My Teams
-                    </Link>
-                    <button
-                      onClick={() => logout()}
-                      className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent rounded-lg"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2 px-4">
-                    <Link href="/auth/login" className="flex-1">
-                      <Button variant="outline" className="w-full" size="sm">Login</Button>
-                    </Link>
-                    <Link href="/auth/register" className="flex-1">
-                      <Button className="w-full" size="sm">Register</Button>
-                    </Link>
-                  </div>
+      <div className="topbar-actions">
+        <div className="language-switch" role="group" aria-label={t('Language')}>
+          <button type="button" lang="pt" aria-pressed={locale === 'pt'} className={locale === 'pt' ? 'is-selected' : ''} onClick={() => setLocale('pt')}><LocalizedText text="PT" /></button>
+          <button type="button" lang="en" aria-pressed={locale === 'en'} className={locale === 'en' ? 'is-selected' : ''} onClick={() => setLocale('en')}><LocalizedText text="EN" /></button>
+        </div>
+        <ThemeToggle />
+        {isAuthenticated ? (
+          <div className="topbar-account">
+            <NotificationBell />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="account-trigger" aria-label={t('Open account menu')}>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.avatar_url} />
+                    <AvatarFallback>{user?.full_name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <span className="account-name">{user?.full_name}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <span className="block">{user?.full_name}</span>
+                  <span className="block text-xs font-normal text-muted-foreground">{user?.email}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile"><User className="mr-2 h-4 w-4" />{t('Profile')}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teams"><Users className="mr-2 h-4 w-4" />{t('My teams')}</Link>
+                </DropdownMenuItem>
+                {canManage && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />{t('Organizer workspace')}</Link>
+                  </DropdownMenuItem>
                 )}
-              </div>
-            </div>
-          </motion.div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />{t('Sign out')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <Link href="/auth/login" className="desktop-sign-in">
+            <Button variant="secondary" size="sm">{t('Organizer sign in')}</Button>
+          </Link>
         )}
-      </AnimatePresence>
+      </div>
+
+      {mobileMenuOpen && (
+        <nav id="mobile-navigation" className="mobile-navigation" aria-label={t('Main navigation')}>
+          <Link href="/" onClick={closeMobileMenu} aria-current={pathname === '/' ? 'page' : undefined}>{t('Home')}</Link>
+          <Link href="/events" onClick={closeMobileMenu} aria-current={pathname.startsWith('/events') ? 'page' : undefined}>{t('Discover events')}</Link>
+          {canManage && <Link href="/dashboard" onClick={closeMobileMenu}>{t('Organizer overview')}</Link>}
+          {canManage && <Link href="/dashboard/events" onClick={closeMobileMenu}>{t('Manage events')}</Link>}
+          {isAuthenticated ? (
+            <>
+              <Link href="/teams" onClick={closeMobileMenu}>{t('My teams')}</Link>
+              <Link href="/profile" onClick={closeMobileMenu}>{t('Profile')}</Link>
+              <button type="button" onClick={() => { closeMobileMenu(); logout() }}>{t('Sign out')}</button>
+            </>
+          ) : <Link href="/auth/login" onClick={closeMobileMenu}>{t('Organizer sign in')}</Link>}
+        </nav>
+      )}
     </header>
   )
 }

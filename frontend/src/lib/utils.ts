@@ -66,16 +66,9 @@ export function getStatusTextColor(status: string): string {
   return colors[status] || 'text-gray-500'
 }
 
-export function getRoleBadgeColor(role: string): string {
-  const colors: Record<string, string> = {
-    admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    organizer: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    participant: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    leader: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    co_leader: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    member: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
-  }
-  return colors[role] || 'bg-gray-100 text-gray-800'
+export function getRoleBadgeColor(_role: string): string {
+  // Role text remains explicit; color is reserved for small status/icon signals.
+  return 'border border-border bg-muted text-foreground'
 }
 
 export function getInitials(name: string): string {

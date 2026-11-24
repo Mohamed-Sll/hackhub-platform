@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.event import EventStatus
 from app.models.notification import NotificationCategory, NotificationType
 from app.models.team import InviteStatus, MemberRole, Team, TeamMember
 from app.repositories.event_repository import EventRepository
@@ -30,6 +31,11 @@ class TeamService:
         event = await self.event_repo.get(event_id)
         if not event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        if event.status not in (EventStatus.PUBLISHED, EventStatus.IN_PROGRESS):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Team registration is closed",
+            )
 
         teams = await self.team_repo.get_user_teams(leader_id)
         if any(team.event_id == event_id for team in teams):
@@ -85,6 +91,11 @@ class TeamService:
         event = await self.event_repo.get(team.event_id)
         if not event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        if event.status not in (EventStatus.PUBLISHED, EventStatus.IN_PROGRESS):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Team invitations are closed",
+            )
 
         accepted_count = sum(1 for m in team.members if m.status == InviteStatus.ACCEPTED)
         if accepted_count >= event.max_team_size:
@@ -238,13 +249,19 @@ class TeamService:
         member.role = MemberRole.LEADER
         team.leader_id = new_leader_id
         await self.db.flush()
-        return team
+        return await self.team_repo.get_team_with_members(team.id)
 
     async def get_team_by_invite_code(self, code: str) -> Team:
         team = await self.team_repo.get_by_invite_code(code)
         if not team:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
         return team
+
+    async def join_by_invitation_code(self, code: str, user_id: UUID) -> TeamMember:
+        team = await self.team_repo.get_by_invite_code(code)
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid invitation code")
+        return await self.join_by_code(team.event_id, code, user_id)
 
     async def join_by_code(self, event_id: UUID, code: str, user_id: UUID) -> TeamMember:
         team = await self.team_repo.get_by_invite_code(code)
@@ -254,6 +271,11 @@ class TeamService:
         event = await self.event_repo.get(team.event_id)
         if not event:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        if event.status not in (EventStatus.PUBLISHED, EventStatus.IN_PROGRESS):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Team registration is closed",
+            )
 
         accepted_count = sum(1 for m in team.members if m.status == InviteStatus.ACCEPTED)
         if accepted_count >= event.max_team_size:

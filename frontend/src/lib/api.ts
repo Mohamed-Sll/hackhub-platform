@@ -2,9 +2,10 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import type {
   LoginRequest, RegisterRequest, User, Event, Team, TeamMember,
   Challenge, ChallengeCategory, Criterion, Project, Evaluation,
-  Certificate, Notification, UserStats,
+  Certificate, CertificateVerification, Notification, UserStats,
   PaginatedResponse, RankingEntry, DashboardStats, PublicDashboardStats, EventDashboardStats,
   CreateEventRequest, CreateTeamRequest, CreateProjectRequest,
+  EventRegistrationPage,
   CreateChallengeRequest, SubmitEvaluationRequest, AIAskRequest,
   AIEvaluateRequest, AISuggestTeamsRequest,
 } from '@/types'
@@ -41,7 +42,7 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/me') {
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -57,7 +58,12 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError)
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth/')) {
+        if (
+          originalRequest.url !== '/auth/me' &&
+          originalRequest.url !== '/auth/session' &&
+          typeof window !== 'undefined' &&
+          !window.location.pathname.startsWith('/auth/')
+        ) {
           // This interceptor runs outside React, so a Next router instance is unavailable.
           // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.assign(`${window.location.origin}/auth/login`)
@@ -90,6 +96,8 @@ const apiClient = {
       api.post('/auth/password-reset/confirm', { token, new_password: password }).then((r) => r.data),
     getMe: () =>
       api.get<User>('/auth/me').then((r) => r.data),
+    getSession: () =>
+      api.get<User | null>('/auth/session').then((r) => r.data),
     getMyStats: () =>
       api.get<UserStats>('/auth/me/stats').then((r) => r.data),
     updateProfile: (data: Partial<User>) =>
@@ -111,6 +119,12 @@ const apiClient = {
       api.delete(`/events/${id}`).then((r) => r.data),
     changeStatus: (id: string, status: string) =>
       api.patch<Event>(`/events/${id}/status`, null, { params: { new_status: status } }).then((r) => r.data),
+    register: (id: string, data: { full_name: string; email: string }) =>
+      api.post(`/events/${id}/registrations`, data).then((r) => r.data),
+    listRegistrations: (id: string, page: number, size: number) =>
+      api.get<EventRegistrationPage>(`/events/${id}/registrations`, { params: { page, size } }).then((r) => r.data),
+    deleteRegistration: (eventId: string, registrationId: string) =>
+      api.delete(`/events/${eventId}/registrations/${registrationId}`).then((r) => r.data),
   },
 
   teams: {
@@ -128,6 +142,8 @@ const apiClient = {
       api.post<TeamMember>(`/events/${eventId}/teams/${teamId}/invite`, { user_id: userId }).then((r) => r.data),
     join: (eventId: string, inviteCode: string) =>
       api.post<TeamMember>(`/events/${eventId}/teams/join`, { invitation_code: inviteCode }).then((r) => r.data),
+    joinByCode: (inviteCode: string) =>
+      api.post<TeamMember>('/teams/join', { invitation_code: inviteCode }).then((r) => r.data),
     accept: (eventId: string, teamId: string, memberId: string) =>
       api.post(`/events/${eventId}/teams/${teamId}/accept/${memberId}`).then((r) => r.data),
     reject: (eventId: string, teamId: string, memberId: string) =>
@@ -201,7 +217,7 @@ const apiClient = {
     list: () =>
       api.get<Certificate[]>('/certificates/my').then((r) => r.data),
     verify: (code: string) =>
-      api.get<Certificate>(`/certificates/verify/${code}`).then((r) => r.data),
+      api.get<CertificateVerification>(`/certificates/verify/${code}`).then((r) => r.data),
     download: (id: string) =>
       api.get(`/certificates/download/${id}`, { responseType: 'blob' }).then((r) => r.data),
     generate: (eventId: string) =>
@@ -221,9 +237,7 @@ const apiClient = {
     ask: (eventId: string, data: AIAskRequest) =>
       api.post<{ answer: string }>(`/ai/events/${eventId}/ask`, data).then((r) => r.data),
     evaluateProject: (projectId: string) =>
-      api.post<{ scores: Record<string, number>; feedback: string }>(`/ai/evaluate/${projectId}`).then((r) => r.data),
-    suggestTeams: (eventId: string) =>
-      api.post<{ suggestions: { members: string[]; combined_skills: string[] }[] }>(`/ai/events/${eventId}/suggest-teams`).then((r) => r.data),
+      api.post<{ feedback: string }>(`/ai/evaluate/${projectId}`).then((r) => r.data),
   },
 
   dashboard: {

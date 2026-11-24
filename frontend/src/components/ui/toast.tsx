@@ -17,8 +17,8 @@ export function ToastProvider() {
         },
         success: {
           iconTheme: {
-            primary: 'hsl(142.1 76.2% 36.3%)',
-            secondary: 'hsl(0 0% 100%)',
+            primary: 'hsl(var(--primary))',
+            secondary: 'hsl(var(--primary-foreground))',
           },
         },
         error: {

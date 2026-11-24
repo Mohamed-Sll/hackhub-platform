@@ -95,6 +95,7 @@ class EventService:
         status: Optional[EventStatus] = None,
         search: Optional[str] = None,
         organizer_id: Optional[UUID] = None,
+        public_only: bool = False,
     ) -> Tuple[List[Event], int]:
         skip = (page - 1) * size
         return await self.event_repo.list_events(
@@ -103,6 +104,7 @@ class EventService:
             status=status,
             search=search,
             organizer_id=organizer_id,
+            public_only=public_only,
         )
 
     async def change_status(self, event_id: UUID, new_status: EventStatus, user: User) -> Event:

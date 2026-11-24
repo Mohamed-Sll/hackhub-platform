@@ -9,6 +9,7 @@ backups, observabilidade externa e validacao de carga no ambiente de destino.
 
 ## Implementado
 
+- Inscricao publica em eventos com nome e email sem conta; dono do evento/admin pode consultar ou remover os registos.
 - Registo, login, refresh rotativo e logout com sessoes revogaveis e cookies
   HTTP-only.
 - Verificacao de email e reset de palavra-passe com tokens de acao separados;
@@ -26,17 +27,22 @@ backups, observabilidade externa e validacao de carga no ambiente de destino.
 - Ranking por HTTP e stream SSE; Redis e cache opcional.
 - Notificacoes persistidas; email e Telegram por `telegram_chat_id` sao
   integracoes opcionais.
+- O perfil nao pede `telegram_chat_id`: a aplicacao nao tem um fluxo para ligar
+  o utilizador ao bot; IDs ja guardados continuam preservados e utilizaveis.
 - Certificados PDF com QR code, verificacao publica e deteccao de alteracao do
   snapshot assinado.
 - Dashboard global de admin, dashboard limitado aos eventos do organizador,
   metricas publicas reduzidas, estatisticas de evento e exportacao CSV/XLSX.
-- Assistente de evento, feedback de projeto e sugestao heuristica de equipas;
-  chamadas ao fornecedor dependem de `OPENAI_API_KEY`.
+- Assistente de evento e feedback de projeto dependem de `OPENAI_API_KEY`. A sugestao global de equipas foi removida por expor perfis sem relacao com o evento.
 - Migracoes Alembic para instalacao nova e atualizacao da base SQLite legada.
 - Health checks, request IDs, logs estruturados, trusted hosts, headers de
   seguranca e rate limiting.
 - Interface Next.js para todos os fluxos acima, incluindo verificacao publica
   de certificados.
+- Interface PT/EN com preferencia persistente, mensagens de erro/notificacao e
+  datas localizadas; o tema escuro preto e o padrao e o tema claro esta disponivel.
+- Dialogos com scroll interno, foco inicial/contido e retorno ao controlo de
+  origem; as abas de eventos podem deslocar-se dentro da area em ecras estreitos.
 
 ## Parcial ou limitado
 
@@ -44,8 +50,7 @@ backups, observabilidade externa e validacao de carga no ambiente de destino.
   concorrencia elevada requerem uma base servidor e validacao propria.
 - Redis nao e obrigatorio. Sem Redis, ranking funciona sem cache e limites
   diarios de tokens de IA ficam desativados.
-- Sugestao de equipas usa perfis globais e uma heuristica por competencias;
-  nao existe entidade de inscricao independente da equipa.
+- Inscricoes publicas sao independentes de equipas, mas ainda nao impoem lotacao nem enviam email de confirmacao.
 - Notificacoes push sao apenas registos internos; nao existe service worker.
 - Certificados usam hash autenticado no servidor, nao assinatura PDF publica
   baseada em certificado digital.
@@ -58,4 +63,4 @@ backups, observabilidade externa e validacao de carga no ambiente de destino.
 - Celery e processamento distribuido de tarefas.
 - Dominios personalizados e faturacao dos planos de organizacao.
 - Upload e armazenamento proprio de ficheiros/media.
-- Atribuicao explicita de jurados a eventos ou projetos.
+- Nao ha atribuicao de jurados por evento: qualquer conta `judge` pode avaliar, mas cada jurado so le os proprios comentarios; dono/admin le todos.

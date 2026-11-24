@@ -1,16 +1,17 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, CheckCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNotifications, useUnreadCount, useMarkRead, useMarkAllRead, useRespondToTeamInvite } from '@/hooks/useNotifications'
-import { formatRelativeTime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import type { Notification } from '@/types'
+import { LocalizedText, LocalizedRelativeTime, translateCurrent } from '@/lib/i18n'
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const unreadCount = useUnreadCount()
   const { data: notificationsData } = useNotifications()
   const markRead = useMarkRead()
@@ -18,6 +19,18 @@ export function NotificationBell() {
   const respondToInvite = useRespondToTeamInvite()
 
   const notifications = notificationsData?.items || []
+
+  useEffect(() => {
+    if (!isOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [isOpen])
 
   const respond = async (notification: Notification, action: 'accept' | 'reject') => {
     const eventId = notification.data?.event_id
@@ -27,17 +40,22 @@ export function NotificationBell() {
     try {
       await respondToInvite.mutateAsync({ action, eventId, teamId, memberId })
       if (!notification.read) await markRead.mutateAsync(notification.id)
-      toast.success(action === 'accept' ? 'Team invitation accepted' : 'Team invitation declined')
+      toast.success(translateCurrent(action === 'accept' ? 'Team invitation accepted' : 'Team invitation declined'))
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Unable to process invitation')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Unable to process invitation'))
     }
   }
 
   return (
     <div className="relative">
       <button
+        type="button"
+        ref={triggerRef}
+        aria-label={`${translateCurrent('Notifications')}${unreadCount && unreadCount > 0 ? `, ${unreadCount} ${translateCurrent('unread')}` : ''}`}
+        aria-expanded={isOpen}
+        aria-controls="notification-panel"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-accent transition-colors"
+        className="relative rounded-lg p-2 transition-colors hover:bg-accent focus-visible:outline-none"
       >
         <Bell className="h-5 w-5" />
         {unreadCount && unreadCount > 0 ? (
@@ -55,35 +73,36 @@ export function NotificationBell() {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
+              id="notification-panel"
+              role="region"
+              aria-label={translateCurrent('Notifications')}
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              className="absolute right-0 mt-2 w-80 z-50 rounded-lg border bg-popover shadow-lg overflow-hidden"
+              className="absolute right-0 z-50 mt-2 flex max-h-[calc(100dvh-6rem)] w-[min(20rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border bg-popover shadow-lg"
             >
               <div className="flex items-center justify-between p-3 border-b">
-                <h3 className="font-semibold text-sm">Notifications</h3>
+                <h3 className="font-semibold text-sm"><LocalizedText text="Notifications" /></h3>
                 {unreadCount && unreadCount > 0 ? (
                   <button
                     onClick={() => markAllRead.mutate()}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <CheckCheck className="h-3 w-3" />
-                    Mark all read
-                  </button>
+                    <LocalizedText text="Mark all read" />{' '}</button>
                 ) : null}
               </div>
-              <div className="max-h-80 overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 {notifications.length === 0 ? (
                   <div className="p-6 text-center text-sm text-muted-foreground">
                     <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    No notifications
-                  </div>
+                    <LocalizedText text="No notifications" />{' '}</div>
                 ) : (
                   notifications.map((notif) => (
                     <div
                       key={notif.id}
                       className={cn(
-                        'p-3 border-b last:border-0 hover:bg-accent/50 transition-colors cursor-pointer',
+                        'p-3 border-b last:border-0 cursor-pointer',
                         !notif.read && 'bg-primary/5'
                       )}
                       onClick={() => {
@@ -96,18 +115,18 @@ export function NotificationBell() {
                             'text-sm',
                             !notif.read && 'font-medium'
                           )}>
-                            {notif.title}
+                            {translateCurrent(notif.title)}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                            {notif.message}
+                            {translateCurrent(notif.message)}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatRelativeTime(notif.sent_at)}
+                            {<LocalizedRelativeTime value={notif.sent_at} />}
                           </p>
                           {notif.category === 'team_invite' && !notif.read && (
                             <div className="mt-3 flex gap-2">
-                              <Button size="sm" onClick={(event) => { event.stopPropagation(); respond(notif, 'accept') }}>Accept</Button>
-                              <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); respond(notif, 'reject') }}>Decline</Button>
+                              <Button size="sm" onClick={(event) => { event.stopPropagation(); respond(notif, 'accept') }}><LocalizedText text="Accept" /></Button>
+                              <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); respond(notif, 'reject') }}><LocalizedText text="Decline" /></Button>
                             </div>
                           )}
                         </div>

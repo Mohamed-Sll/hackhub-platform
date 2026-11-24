@@ -4,6 +4,7 @@ import { Trophy, Medal, Award } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { generateInitials, cn } from '@/lib/utils'
 import type { RankingEntry } from '@/types'
+import { LocalizedText } from '@/lib/i18n'
 
 interface RankingTableProps {
   entries: RankingEntry[]
@@ -45,7 +46,7 @@ export function RankingTable({ entries, isLoading }: RankingTableProps) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>No rankings available yet</p>
+        <p><LocalizedText text="No rankings available yet" /></p>
       </div>
     )
   }
@@ -65,10 +66,10 @@ export function RankingTable({ entries, isLoading }: RankingTableProps) {
               transition={{ delay: index * 0.03 }}
               layout
               className={cn(
-                'flex items-center gap-4 p-4 rounded-lg transition-colors',
+                'flex items-center gap-4 p-4 rounded-lg',
                 isTop3
                   ? 'bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border border-yellow-500/20'
-                  : 'hover:bg-muted/50'
+                  : ''
               )}
             >
               <div className={cn(
@@ -94,7 +95,7 @@ export function RankingTable({ entries, isLoading }: RankingTableProps) {
               </div>
               <div className="text-right shrink-0">
                 <p className="font-bold text-lg">{entry.total_score?.toFixed(1)}</p>
-                <p className="text-xs text-muted-foreground">points</p>
+                <p className="text-xs text-muted-foreground"><LocalizedText text="points" /></p>
               </div>
             </motion.div>
           )

@@ -2,9 +2,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from app.core.config import settings
 from app.core.security import create_action_token, get_password_hash
 from app.models.challenge import ChallengeCategory
-from app.models.event import Event
+from app.models.event import Event, EventStatus
 from app.models.notification import Notification, NotificationCategory, NotificationType
 from app.models.team import Team
 from app.models.user import User, UserRole
@@ -24,6 +25,20 @@ async def test_email_action_token_cannot_authenticate(client, test_user):
     )
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_user_profile_endpoint_only_exposes_self_or_admin(
+    client, test_user, second_user, auth_headers, second_user_headers, admin_headers
+):
+    own_profile = await client.get(f"/api/v1/users/{test_user.id}", headers=auth_headers)
+    another_profile = await client.get(f"/api/v1/users/{second_user.id}", headers=auth_headers)
+    admin_profile = await client.get(f"/api/v1/users/{test_user.id}", headers=admin_headers)
+
+    assert own_profile.status_code == 200
+    assert own_profile.json()["email"] == test_user.email
+    assert another_profile.status_code == 403
+    assert admin_profile.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -59,12 +74,14 @@ async def test_nested_team_route_enforces_event_scope_and_hides_invite_code(clie
         title="First event",
         start_date=now + timedelta(days=1),
         end_date=now + timedelta(days=2),
+        status=EventStatus.PUBLISHED,
         organizer_id=admin_user.id,
     )
     second_event = Event(
         title="Second event",
         start_date=now + timedelta(days=3),
         end_date=now + timedelta(days=4),
+        status=EventStatus.PUBLISHED,
         organizer_id=admin_user.id,
     )
     db_session.add_all([first_event, second_event])
@@ -93,6 +110,7 @@ async def test_categories_static_route_is_not_shadowed_by_challenge_id(client, d
         title="Categories event",
         start_date=now + timedelta(days=1),
         end_date=now + timedelta(days=2),
+        status=EventStatus.PUBLISHED,
         organizer_id=admin_user.id,
     )
     db_session.add(event)
@@ -104,3 +122,23 @@ async def test_categories_static_route_is_not_shadowed_by_challenge_id(client, d
 
     assert response.status_code == 200
     assert response.json()[0]["name"] == "Main"
+
+
+@pytest.mark.asyncio
+async def test_cookie_authenticated_profile_mutation_checks_origin(client, auth_headers):
+    access_token = auth_headers["Authorization"].removeprefix("Bearer ")
+    client.cookies.set("access_token", access_token)
+
+    allowed = await client.put(
+        "/api/v1/auth/me",
+        json={"full_name": "Origin checked user"},
+        headers={"Origin": settings.cors_origins_list[0]},
+    )
+    rejected = await client.put(
+        "/api/v1/auth/me",
+        json={"full_name": "Attacker change"},
+        headers={"Origin": "https://attacker.example"},
+    )
+
+    assert allowed.status_code == 200
+    assert rejected.status_code == 403

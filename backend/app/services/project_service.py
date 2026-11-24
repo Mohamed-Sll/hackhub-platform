@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.challenge import Challenge
+from app.models.event import EventStatus
 from app.models.project import Project, ProjectStatus
 from app.repositories.event_repository import EventRepository
 from app.repositories.project_repository import ProjectRepository
@@ -161,6 +162,13 @@ class ProjectService:
 
     async def get_project(self, event_id: UUID, project_id: UUID) -> Project:
         project = await self.project_repo.get(project_id)
-        if not project or project.event_id != event_id:
+        if (
+            not project
+            or project.event_id != event_id
+            or project.status not in (ProjectStatus.SUBMITTED, ProjectStatus.FINALIZED)
+        ):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        event = await self.event_repo.get(event_id)
+        if not event or event.status == EventStatus.DRAFT:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         return project

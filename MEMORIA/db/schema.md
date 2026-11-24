@@ -16,6 +16,8 @@ persistentes exigem uma revisao. Foreign keys sao ativadas em cada conexao.
   mas o fluxo de gestao ainda nao tem API propria.
 - `events`: organizador, datas, estado, configuracao de equipas e conteudo
   flexivel. Agrega desafios, equipas, projetos e certificados.
+- `event_registrations`: full name and email for accountless event signup; unique
+  email per event and cascade deletion with its event.
 - `teams`: pertence a um evento, tem lider e codigo de convite unico.
 - `team_members`: liga utilizador e equipa, com papel `leader|member` e estado
   `pending|accepted|rejected`.

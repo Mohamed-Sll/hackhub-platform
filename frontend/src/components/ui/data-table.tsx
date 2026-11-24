@@ -6,6 +6,7 @@ import { Button } from './button'
 import { Skeleton } from './skeleton'
 import { EmptyState } from './empty-state'
 import { motion } from 'framer-motion'
+import { LocalizedText, useI18n } from '@/lib/i18n'
 
 export interface Column<T> {
   key: string
@@ -50,6 +51,7 @@ export function DataTable<T>({
   onPageChange,
   className,
 }: DataTableProps<T>) {
+  const { t } = useI18n()
   if (isLoading) {
     return (
       <div className={cn('space-y-3', className)}>
@@ -90,28 +92,28 @@ export function DataTable<T>({
                 {columns.map((col) => (
                   <th
                     key={col.key}
+                    scope="col"
+                    aria-sort={sortColumn === col.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
                     className={cn(
                       'h-12 px-4 text-left align-middle font-medium text-muted-foreground text-sm',
-                      col.sortable && 'cursor-pointer select-none hover:text-foreground transition-colors',
+                      col.sortable && 'select-none',
                       col.className
                     )}
-                    onClick={() => col.sortable && onSort?.(col.key)}
                   >
                     <div className="flex items-center gap-1">
-                      {col.header}
-                      {col.sortable && (
-                        <span className="inline-flex">
+                      {col.sortable ? (
+                        <button
+                          type="button"
+                          className="inline-flex min-h-10 items-center gap-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`${t('Sort by')} ${t(col.header)}`}
+                          onClick={() => onSort?.(col.key)}
+                        >
+                          {t(col.header)}
                           {sortColumn === col.key ? (
-                            sortDirection === 'asc' ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )
-                          ) : (
-                            <ChevronsUpDown className="h-4 w-4 opacity-30" />
-                          )}
-                        </span>
-                      )}
+                            sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                          ) : <ChevronsUpDown className="h-4 w-4 opacity-30" aria-hidden="true" />}
+                        </button>
+                      ) : t(col.header)}
                     </div>
                   </th>
                 ))}
@@ -124,7 +126,7 @@ export function DataTable<T>({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                  className="border-b last:border-0"
                 >
                   {columns.map((col) => (
                     <td key={col.key} className={cn('p-4 align-middle text-sm', col.className)}>
@@ -145,18 +147,16 @@ export function DataTable<T>({
             disabled={page === 1}
             onClick={() => onPageChange?.(1)}
           >
-            First
-          </Button>
+            <LocalizedText text="First" />{' '}</Button>
           <Button
             variant="outline"
             size="sm"
             disabled={page === 1}
             onClick={() => onPageChange?.((page || 1) - 1)}
           >
-            Previous
-          </Button>
+            <LocalizedText text="Previous" />{' '}</Button>
           <span className="text-sm text-muted-foreground px-2">
-            Page {page} of {totalPages}
+            <LocalizedText text="Page" />{' '}{page} <LocalizedText text="of" />{' '}{totalPages}
           </span>
           <Button
             variant="outline"
@@ -164,16 +164,14 @@ export function DataTable<T>({
             disabled={page === totalPages}
             onClick={() => onPageChange?.((page || 1) + 1)}
           >
-            Next
-          </Button>
+            <LocalizedText text="Next" />{' '}</Button>
           <Button
             variant="outline"
             size="sm"
             disabled={page === totalPages}
             onClick={() => onPageChange?.(totalPages)}
           >
-            Last
-          </Button>
+            <LocalizedText text="Last" />{' '}</Button>
         </div>
       )}
     </div>

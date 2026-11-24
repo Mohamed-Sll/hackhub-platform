@@ -112,6 +112,23 @@ async def test_get_profile_unauthorized(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_session_endpoint_returns_anonymous_state_without_cookies(client: AsyncClient):
+    response = await client.get("/api/v1/auth/session")
+    assert response.status_code == 200
+    assert response.json() is None
+
+    private_response = await client.get("/api/v1/auth/me")
+    assert private_response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_session_endpoint_returns_the_authenticated_user(client: AsyncClient, auth_headers: dict, test_user):
+    response = await client.get("/api/v1/auth/session", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["id"] == str(test_user.id)
+
+
+@pytest.mark.asyncio
 async def test_update_profile(client: AsyncClient, auth_headers: dict, test_user):
     response = await client.put(
         "/api/v1/auth/me",

@@ -10,8 +10,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
-import { formatDate } from '@/lib/utils'
 import type { Certificate } from '@/types'
+import { LocalizedText, LocalizedDate } from '@/lib/i18n'
 
 export default function CertificatesPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
@@ -22,7 +22,7 @@ export default function CertificatesPage() {
   })
 
   if (authLoading) return <LoadingState className="min-h-[calc(100vh-4rem)]" />
-  if (!isAuthenticated) return <p className="text-center py-20 text-muted-foreground">Please log in to view certificates.</p>
+  if (!isAuthenticated) return <p className="text-center py-20 text-muted-foreground"><LocalizedText text="Please log in to view certificates." /></p>
   if (isLoading) return <LoadingState className="min-h-[calc(100vh-4rem)]" />
   if (error) return <ErrorState message="Failed to load certificates" />
 
@@ -33,8 +33,8 @@ export default function CertificatesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="mb-8">
-            <h1 className="text-3xl font-bold">My Certificates</h1>
-            <p className="text-muted-foreground mt-1">View and download your certificates</p>
+            <h1 className="text-3xl font-bold"><LocalizedText text="My Certificates" /></h1>
+            <p className="text-muted-foreground mt-1"><LocalizedText text="View and download your certificates" /></p>
           </div>
 
           {certs.length === 0 ? (
@@ -46,7 +46,7 @@ export default function CertificatesPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {certs.map((cert) => (
-                <motion.div key={cert.id} whileHover={{ y: -4 }}>
+                <motion.div key={cert.id}>
                   <Card className="h-full">
                     <CardHeader>
                       <div className="flex items-center gap-2">
@@ -59,20 +59,18 @@ export default function CertificatesPage() {
                         {(cert.extra_data as Record<string, string>)?.event_title || 'Event'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Issued: {formatDate(cert.issued_at)}
+                        <LocalizedText text="Issued:" />{' '}{<LocalizedDate value={cert.issued_at} />}
                       </p>
                       <div className="flex gap-2 pt-2">
                         <Button size="sm" variant="outline" asChild>
                           <a href={`/api/v1/certificates/download/${cert.id}`} target="_blank" rel="noopener">
                             <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
+                            <LocalizedText text="Download" />{' '}</a>
                         </Button>
                         <Button size="sm" variant="outline" asChild>
                           <a href={`/api/v1/certificates/verify/${cert.verification_code}`} target="_blank" rel="noopener">
                             <Eye className="h-4 w-4 mr-1" />
-                            Verify
-                          </a>
+                            <LocalizedText text="Verify" />{' '}</a>
                         </Button>
                       </div>
                     </CardContent>

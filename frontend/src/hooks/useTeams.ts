@@ -66,6 +66,16 @@ export function useJoinTeam(eventId: string) {
   })
 }
 
+export function useJoinTeamByCode() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (inviteCode: string) => apiClient.teams.joinByCode(inviteCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-teams'] })
+    },
+  })
+}
+
 export function useRemoveMember(eventId: string, teamId: string) {
   const queryClient = useQueryClient()
   return useMutation({

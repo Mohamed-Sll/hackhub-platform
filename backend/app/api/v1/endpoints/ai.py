@@ -8,7 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.deps import get_current_active_user, require_event_manager
+from app.core.deps import (
+    get_current_active_user,
+    require_event_manager,
+    require_event_read_access,
+)
 from app.models.project import Project
 from app.models.user import User, UserRole
 from app.services.ai_service import AIService
@@ -34,6 +38,7 @@ async def ask_event_assistant(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    await require_event_read_access(db, event_id, current_user)
     service = AIService(db)
     allowed = await service.check_daily_token_limit(str(current_user.id))
     if not allowed:
@@ -41,7 +46,7 @@ async def ask_event_assistant(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Daily AI token limit reached",
         )
-    answer = await service.get_event_assistant(event_id, body.question)
+    answer = await service.get_event_assistant(event_id, body.question, str(current_user.id))
     return {"answer": answer}
 
 
@@ -63,24 +68,11 @@ async def ai_evaluate(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     await require_event_manager(db, project.event_id, current_user)
     service = AIService(db)
-    feedback = await service.assist_evaluation(project_id)
-    return {"feedback": feedback}
-
-
-@router.post("/events/{event_id}/suggest-teams")
-@limiter.limit(settings.AI_RATE_LIMIT_SUGGEST)
-async def suggest_teams(
-    request: Request,
-    event_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    if not _is_organizer_or_admin(current_user):
+    allowed = await service.check_daily_token_limit(str(current_user.id))
+    if not allowed:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organizers and admins can suggest teams",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Daily AI token limit reached",
         )
-    await require_event_manager(db, event_id, current_user)
-    service = AIService(db)
-    suggestions = await service.suggest_teams(event_id)
-    return {"suggestions": suggestions}
+    feedback = await service.assist_evaluation(project_id, str(current_user.id))
+    return {"feedback": feedback}

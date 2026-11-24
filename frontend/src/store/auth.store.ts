@@ -6,7 +6,7 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (data: LoginRequest) => Promise<void>
+  login: (data: LoginRequest) => Promise<User>
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
   refreshToken: () => Promise<void>
@@ -25,6 +25,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isAuthenticated: true })
     const user = await apiClient.auth.getMe()
     set({ user })
+    return user
   },
 
   register: async (data: RegisterRequest) => {
@@ -64,8 +65,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isLoading: false })
         return
       }
-      const user = await apiClient.auth.getMe()
-      set({ user, isAuthenticated: true, isLoading: false })
+      const user = await apiClient.auth.getSession()
+      set({ user, isAuthenticated: user !== null, isLoading: false })
     } catch {
       set({ user: null, isAuthenticated: false, isLoading: false })
     }

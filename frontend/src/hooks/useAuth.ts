@@ -10,7 +10,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: async (data: LoginRequest) => {
       const store = useAuthStore.getState()
-      await store.login(data)
+      return store.login(data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] })
@@ -25,7 +25,7 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      storeLogout()
+      await storeLogout()
       queryClient.clear()
     },
   })

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
+import { LocalizedText, translateCurrent } from '@/lib/i18n'
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -40,10 +41,10 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       await registerUser(data)
-      toast.success('Account created successfully! Please sign in.')
+      toast.success(translateCurrent('Account created successfully! Please sign in.'))
       router.push('/auth/login')
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Registration failed. Please try again.')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Registration failed. Please try again.'))
     }
   }
 
@@ -95,17 +96,14 @@ export function RegisterForm() {
           onChange={() => setShowPassword(!showPassword)}
         />
         <label htmlFor="show-password" className="text-sm text-muted-foreground">
-          Show passwords
-        </label>
+          <LocalizedText text="Show passwords" />{' '}</label>
       </div>
       <Button type="submit" className="w-full" loading={isRegistering}>
-        Create Account
-      </Button>
+        <LocalizedText text="Create Account" />{' '}</Button>
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
+        <LocalizedText text="Already have an account?" />{' '}
         <Link href="/auth/login" className="text-primary hover:underline font-medium">
-          Sign In
-        </Link>
+          <LocalizedText text="Sign In" />{' '}</Link>
       </p>
     </form>
   )

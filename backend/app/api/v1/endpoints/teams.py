@@ -1,22 +1,28 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
-from app.core.deps import get_current_active_user
+from app.core.deps import (
+    get_current_active_user,
+    get_optional_current_user,
+    require_event_read_access,
+)
+from app.core.rate_limit import limiter
 from app.models.team import InviteStatus, Team, TeamMember
 from app.models.user import User
 from app.schemas.team import (
+    PublicTeamResponse,
     TeamCreate,
     TeamInvite,
     TeamJoin,
     TeamLeadershipTransfer,
     TeamMemberResponse,
     TeamPrivateResponse,
-    TeamResponse,
 )
 from app.services.team_service import TeamService
 
@@ -41,6 +47,18 @@ async def get_team_by_id(
     return team
 
 
+@standalone_router.post("/join", response_model=TeamMemberResponse, status_code=status.HTTP_200_OK)
+@limiter.limit(settings.TEAM_JOIN_RATE_LIMIT)
+async def join_team_with_invitation_code(
+    request: Request,
+    join_data: TeamJoin,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = TeamService(db)
+    return await service.join_by_invitation_code(join_data.invitation_code, current_user.id)
+
+
 @standalone_router.get("/", response_model=List[TeamPrivateResponse])
 async def list_my_teams(
     db: AsyncSession = Depends(get_db),
@@ -58,8 +76,13 @@ async def list_my_teams(
     return teams
 
 
-@router.get("/", response_model=list[TeamResponse])
-async def list_teams(event_id: UUID, db: AsyncSession = Depends(get_db)):
+@router.get("/", response_model=list[PublicTeamResponse])
+async def list_teams(
+    event_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    await require_event_read_access(db, event_id, current_user)
     service = TeamService(db)
     teams = await service.list_event_teams(event_id)
     return teams
@@ -77,8 +100,14 @@ async def create_team(
     return team
 
 
-@router.get("/{team_id}", response_model=TeamResponse)
-async def get_team(event_id: UUID, team_id: UUID, db: AsyncSession = Depends(get_db)):
+@router.get("/{team_id}", response_model=PublicTeamResponse)
+async def get_team(
+    event_id: UUID,
+    team_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    await require_event_read_access(db, event_id, current_user)
     service = TeamService(db)
     team = await service.team_repo.get_team_with_members(team_id)
     if not team or team.event_id != event_id:
@@ -87,7 +116,9 @@ async def get_team(event_id: UUID, team_id: UUID, db: AsyncSession = Depends(get
 
 
 @router.post("/join", response_model=TeamMemberResponse)
+@limiter.limit(settings.TEAM_JOIN_RATE_LIMIT)
 async def join_team(
+    request: Request,
     event_id: UUID,
     join_data: TeamJoin,
     db: AsyncSession = Depends(get_db),

@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.event import Event, EventStatus
 from app.models.project import Project, ProjectStatus
 from app.repositories.base import BaseRepository
 
@@ -14,7 +15,14 @@ class ProjectRepository(BaseRepository[Project]):
 
     async def get_by_event(self, event_id: UUID) -> List[Project]:
         result = await self.db.execute(
-            select(Project).where(Project.event_id == event_id).order_by(Project.updated_at.desc())
+            select(Project)
+            .join(Event, Event.id == Project.event_id)
+            .where(
+                Project.event_id == event_id,
+                Project.status.in_([ProjectStatus.SUBMITTED, ProjectStatus.FINALIZED]),
+                Event.status.in_([EventStatus.PUBLISHED, EventStatus.IN_PROGRESS, EventStatus.CLOSED]),
+            )
+            .order_by(Project.updated_at.desc())
         )
         return list(result.scalars().all())
 

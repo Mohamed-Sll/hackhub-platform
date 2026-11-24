@@ -6,7 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_organizer, require_event_manager
+from app.core.deps import (
+    get_current_organizer,
+    get_optional_current_user,
+    require_event_manager,
+    require_event_read_access,
+)
 from app.models.challenge import Challenge, ChallengeCategory, Criterion
 from app.models.user import User
 from app.repositories.base import BaseRepository
@@ -36,7 +41,12 @@ async def _get_category(db: AsyncSession, event_id: UUID, category_id: UUID) -> 
 
 
 @router.get("/", response_model=List[ChallengeResponse])
-async def list_challenges(event_id: UUID, db: AsyncSession = Depends(get_db)):
+async def list_challenges(
+    event_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    await require_event_read_access(db, event_id, current_user)
     result = await db.execute(
         select(Challenge).where(Challenge.event_id == event_id).order_by(Challenge.created_at.desc())
     )
@@ -84,7 +94,12 @@ async def create_category(
 
 
 @router.get("/categories", response_model=List[ChallengeCategoryResponse])
-async def list_categories(event_id: UUID, db: AsyncSession = Depends(get_db)):
+async def list_categories(
+    event_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    await require_event_read_access(db, event_id, current_user)
     result = await db.execute(
         select(ChallengeCategory).where(ChallengeCategory.event_id == event_id).order_by(ChallengeCategory.order)
     )
@@ -111,7 +126,13 @@ async def create_criterion(
 
 
 @router.get("/{challenge_id}", response_model=ChallengeResponse)
-async def get_challenge(event_id: UUID, challenge_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_challenge(
+    event_id: UUID,
+    challenge_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    await require_event_read_access(db, event_id, current_user)
     result = await db.execute(select(Challenge).where(Challenge.id == challenge_id, Challenge.event_id == event_id))
     challenge = result.scalar_one_or_none()
     if challenge is None:

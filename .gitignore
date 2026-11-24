@@ -2,54 +2,73 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
-dist/
-build/
 .eggs/
 *.egg
-.env
-venv/
 .venv/
+venv/
+ENV/
+build/
+dist/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.hypothesis/
+pip-wheel-metadata/
 
-# Node
+# Node.js and Next.js
 node_modules/
 .next/
 out/
-dist/
-.env.local
+.vercel/
+.turbo/
+.npm/
+coverage/
 *.tsbuildinfo
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# IDE
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local databases and SQLite sidecar files
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+
+# Uploaded files and local application data
+data/
+uploads/
+media/
+
+# Logs and test artifacts
+*.log
+**/.playwright-cli/
+playwright-report/
+test-results/
+
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# Operating system files
 .DS_Store
 Thumbs.db
-
-# Docker
-data/
-*.log
-
-# Alembic
-backend/alembic/versions/*.pyc
-
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
-coverage/
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# Uploads
-uploads/
-media/
-
-hackhub.db
-test.db
+Desktop.ini

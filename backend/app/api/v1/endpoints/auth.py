@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.deps import get_current_active_user
+from app.core.deps import get_current_active_user, get_current_user
 from app.core.rate_limit import limiter
 from app.models.user import User
 from app.schemas.user import (
@@ -127,6 +127,18 @@ async def password_reset_confirm(request: Request, payload: PasswordResetConfirm
 @router.get("/me", response_model=UserPrivateResponse)
 async def get_profile(current_user: User = Depends(get_current_active_user)):
     return current_user
+
+
+@router.get("/session", response_model=UserPrivateResponse | None)
+async def get_session(request: Request, db: AsyncSession = Depends(get_db)):
+    has_access_token = bool(request.cookies.get("access_token"))
+    has_bearer_token = request.headers.get("Authorization", "").startswith("Bearer ")
+    has_refresh_token = bool(request.cookies.get("refresh_token"))
+    if not has_access_token and not has_bearer_token and not has_refresh_token:
+        return None
+
+    user = await get_current_user(request, db)
+    return await get_current_active_user(user)
 
 
 @router.put("/me", response_model=UserPrivateResponse)

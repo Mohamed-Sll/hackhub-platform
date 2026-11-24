@@ -95,6 +95,21 @@ export interface Event {
   updated_at: string;
 }
 
+export interface EventRegistration {
+  id: string;
+  event_id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+}
+
+export interface EventRegistrationPage {
+  items: EventRegistration[];
+  total: number;
+  page: number;
+  size: number;
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -208,6 +223,14 @@ export interface Certificate {
   digital_signature?: string;
   issued_at: string;
   extra_data?: Record<string, unknown>;
+}
+
+export interface CertificateVerification {
+  verification_code: string;
+  type: CertificateType;
+  recipient_name: string;
+  event_title: string;
+  issued_at: string;
 }
 
 export interface Notification {

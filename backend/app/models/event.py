@@ -79,3 +79,9 @@ class Event(Base):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    registrations = relationship(
+        "EventRegistration",
+        back_populates="event",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )

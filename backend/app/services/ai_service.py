@@ -1,14 +1,12 @@
-from datetime import date
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.user import UserRole
 from app.repositories.event_repository import EventRepository
 from app.repositories.project_repository import ProjectRepository
-from app.repositories.user_repository import UserRepository
 
 try:
     import redis.asyncio as aioredis
@@ -29,12 +27,11 @@ class AIService:
         self.db = db
         self.event_repo = EventRepository(db)
         self.project_repo = ProjectRepository(db)
-        self.user_repo = UserRepository(db)
 
     async def check_daily_token_limit(self, user_id: str) -> bool:
         if _redis is None or not settings.AI_DAILY_TOKEN_LIMIT:
             return True
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
         key = f"ai:usage:{user_id}:{today}"
         try:
             current = await _redis.get(key)
@@ -47,7 +44,7 @@ class AIService:
     async def track_token_usage(self, user_id: str, tokens: int) -> None:
         if _redis is None:
             return
-        today = date.today().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
         key = f"ai:usage:{user_id}:{today}"
         try:
             await _redis.incrby(key, tokens)
@@ -81,7 +78,7 @@ class AIService:
                 detail="AI provider request failed",
             )
 
-    async def get_event_assistant(self, event_id: UUID, question: str) -> str:
+    async def get_event_assistant(self, event_id: UUID, question: str, user_id: str) -> str:
         event = await self.event_repo.get(event_id)
         if not event:
             return "Event not found."
@@ -115,9 +112,9 @@ class AIService:
         )
         user_message = f"Event information:\n{context}\n\nQuestion: {question}"
 
-        return await self._query_openai(system_prompt, user_message)
+        return await self._query_openai(system_prompt, user_message, user_id)
 
-    async def assist_evaluation(self, project_id: UUID) -> str:
+    async def assist_evaluation(self, project_id: UUID, user_id: str) -> str:
         project = await self.project_repo.get(project_id)
         if not project:
             return "Project not found."
@@ -137,58 +134,4 @@ class AIService:
         )
         user_message = f"Project Details:\n{context}\n\nPlease evaluate this project."
 
-        return await self._query_openai(system_prompt, user_message)
-
-    async def suggest_teams(self, event_id: UUID) -> list:
-        participants, _ = await self.user_repo.list_users_paginated(
-            limit=200,
-            role=UserRole.PARTICIPANT,
-        )
-
-        if len(participants) < 2:
-            return []
-
-        scored_participants = []
-        for p in participants:
-            score = 0
-            if p.skills:
-                score += len(p.skills) * 2
-            if p.preferred_languages:
-                score += len(p.preferred_languages)
-            if p.preferred_frameworks:
-                score += len(p.preferred_frameworks)
-            if p.experience_level:
-                exp_map = {"beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
-                score += exp_map.get(p.experience_level.lower(), 0)
-            scored_participants.append(
-                {
-                    "user_id": str(p.id),
-                    "username": p.username,
-                    "full_name": p.full_name,
-                    "skills": p.skills or [],
-                    "languages": p.preferred_languages or [],
-                    "frameworks": p.preferred_frameworks or [],
-                    "experience_level": p.experience_level,
-                    "score": score,
-                }
-            )
-
-        scored_participants.sort(key=lambda x: x["score"], reverse=True)
-
-        teams = []
-        team_size = 3
-        for i in range(0, len(scored_participants), team_size):
-            team_members = scored_participants[i : i + team_size]
-            if len(team_members) >= 2:
-                team_skills = set()
-                for m in team_members:
-                    team_skills.update(m["skills"])
-                teams.append(
-                    {
-                        "members": team_members,
-                        "combined_skills": list(team_skills),
-                        "average_score": sum(m["score"] for m in team_members) / len(team_members),
-                    }
-                )
-
-        return teams
+        return await self._query_openai(system_prompt, user_message, user_id)

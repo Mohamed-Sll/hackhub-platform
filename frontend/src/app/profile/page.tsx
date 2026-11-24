@@ -1,8 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Edit2, Github, Linkedin, Globe, Mail, MapPin, GraduationCap, BookOpen, Award } from 'lucide-react'
+import { Edit2, Code2, BriefcaseBusiness, Globe, Mail, MapPin, GraduationCap, BookOpen, Award } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -10,17 +10,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { LoadingState } from '@/components/ui/loading-state'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/useAuth'
 import { generateInitials, getRoleBadgeColor } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
+import { LocalizedText, translateCurrent } from '@/lib/i18n'
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isLoading, isAuthenticated, updateProfile, logout } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const editProfileButtonRef = useRef<HTMLButtonElement>(null)
   const [editData, setEditData] = useState({
     full_name: '',
     bio: '',
@@ -31,7 +33,6 @@ export default function ProfilePage() {
     linkedin_url: '',
     portfolio_url: '',
     skills: '',
-    telegram_chat_id: '',
   })
   const { data: stats } = useQuery({
     queryKey: ['profile-stats'],
@@ -57,7 +58,6 @@ export default function ProfilePage() {
       linkedin_url: user.linkedin_url || '',
       portfolio_url: user.portfolio_url || '',
       skills: (user.skills || []).join(', '),
-      telegram_chat_id: user.telegram_chat_id || '',
     })
     setIsEditing(true)
   }
@@ -68,10 +68,10 @@ export default function ProfilePage() {
         ...editData,
         skills: editData.skills.split(',').map((s) => s.trim()).filter(Boolean),
       })
-      toast.success('Profile updated!')
+      toast.success(translateCurrent('Profile updated!'))
       setIsEditing(false)
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to update profile')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to update profile'))
     }
   }
 
@@ -90,19 +90,18 @@ export default function ProfilePage() {
                     </AvatarFallback>
                   </Avatar>
                   <h2 className="text-xl font-bold">{user.full_name}</h2>
-                  <p className="text-sm text-muted-foreground">@{user.username}</p>
+                  <p className="text-sm text-muted-foreground"><LocalizedText text="@" />{user.username}</p>
                   <div className="mt-2">
                     <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role}
+                      <LocalizedText text={user.role} />
                     </Badge>
                   </div>
                   {user.bio && (
                     <p className="text-sm text-muted-foreground mt-4">{user.bio}</p>
                   )}
-                  <Button variant="outline" className="w-full mt-4" onClick={openEditDialog}>
+                  <Button ref={editProfileButtonRef} variant="outline" className="w-full mt-4" onClick={openEditDialog}>
                     <Edit2 className="mr-2 h-4 w-4" />
-                    Edit Profile
-                  </Button>
+                    <LocalizedText text="Edit Profile" />{' '}</Button>
                 </CardContent>
               </Card>
             </div>
@@ -110,14 +109,14 @@ export default function ProfilePage() {
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>About</CardTitle>
+                  <CardTitle><LocalizedText text="About" /></CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {user.university && (
                     <div className="flex items-center gap-3">
                       <GraduationCap className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">University</p>
+                        <p className="text-sm font-medium"><LocalizedText text="University" /></p>
                         <p className="text-sm text-muted-foreground">{user.university}</p>
                       </div>
                     </div>
@@ -126,7 +125,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-3">
                       <BookOpen className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Course</p>
+                        <p className="text-sm font-medium"><LocalizedText text="Course" /></p>
                         <p className="text-sm text-muted-foreground">{user.course}</p>
                       </div>
                     </div>
@@ -135,7 +134,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-3">
                       <MapPin className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Country</p>
+                        <p className="text-sm font-medium"><LocalizedText text="Country" /></p>
                         <p className="text-sm text-muted-foreground">{user.country}</p>
                       </div>
                     </div>
@@ -143,7 +142,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">Email</p>
+                      <p className="text-sm font-medium"><LocalizedText text="Email" /></p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
@@ -153,7 +152,7 @@ export default function ProfilePage() {
               {user.skills && user.skills.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Skills</CardTitle>
+                    <CardTitle><LocalizedText text="Skills" /></CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -167,50 +166,47 @@ export default function ProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Links</CardTitle>
+                  <CardTitle><LocalizedText text="Links" /></CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {user.github_url && (
                     <a href={user.github_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      <Github className="h-5 w-5" />
-                      GitHub
-                    </a>
+                      <Code2 className="h-5 w-5" />
+                      <LocalizedText text="GitHub" />{' '}</a>
                   )}
                   {user.linkedin_url && (
                     <a href={user.linkedin_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      <Linkedin className="h-5 w-5" />
-                      LinkedIn
-                    </a>
+                      <BriefcaseBusiness className="h-5 w-5" />
+                      <LocalizedText text="LinkedIn" />{' '}</a>
                   )}
                   {user.portfolio_url && (
                     <a href={user.portfolio_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
                       <Globe className="h-5 w-5" />
-                      Portfolio
-                    </a>
+                      <LocalizedText text="Portfolio" />{' '}</a>
                   )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Stats</CardTitle>
+                  <CardTitle><LocalizedText text="Stats" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <p className="text-2xl font-bold text-primary">{stats?.events || 0}</p>
-                      <p className="text-xs text-muted-foreground">Events</p>
+                      <p className="text-xs text-muted-foreground"><LocalizedText text="Events" /></p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-primary">{stats?.projects || 0}</p>
-                      <p className="text-xs text-muted-foreground">Projects</p>
+                      <p className="text-xs text-muted-foreground"><LocalizedText text="Projects" /></p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-primary">{stats?.certificates || 0}</p>
-                      <p className="text-xs text-muted-foreground">Certificates</p>
+                      <p className="text-xs text-muted-foreground"><LocalizedText text="Certificates" /></p>
                     </div>
                   </div>
                 </CardContent>
@@ -221,9 +217,15 @@ export default function ProfilePage() {
       </div>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            editProfileButtonRef.current?.focus()
+          }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle><LocalizedText text="Edit Profile" /></DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
@@ -232,8 +234,9 @@ export default function ProfilePage() {
               onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
             />
             <div className="space-y-1">
-              <label className="text-sm font-medium">Bio</label>
+              <label htmlFor="profile-bio" className="text-sm font-medium"><LocalizedText text="Bio" /></label>
               <textarea
+                id="profile-bio"
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={editData.bio}
                 onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
@@ -276,16 +279,11 @@ export default function ProfilePage() {
               value={editData.portfolio_url}
               onChange={(e) => setEditData({ ...editData, portfolio_url: e.target.value })}
             />
-            <Input
-              label="Telegram Chat ID"
-              value={editData.telegram_chat_id}
-              onChange={(e) => setEditData({ ...editData, telegram_chat_id: e.target.value })}
-              placeholder="Numeric chat ID from the HackHub bot"
-            />
-            <Button className="w-full" onClick={handleSaveProfile}>
-              Save Changes
-            </Button>
           </div>
+          <DialogFooter>
+            <Button className="w-full" onClick={handleSaveProfile}>
+              <LocalizedText text="Save Changes" />{' '}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

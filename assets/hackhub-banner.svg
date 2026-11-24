@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="460" viewBox="0 0 1440 460" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">HackHub — Make room for big ideas</title>
+  <desc id="description">HackHub's black and coral brand banner with a three-dimensional galaxy representing discovery, building, and celebrating at hackathons.</desc>
+  <defs>
+    <linearGradient id="canvas" x1="40" y1="0" x2="1390" y2="460" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0A0A"/>
+      <stop offset=".58" stop-color="#0A0A0A"/>
+      <stop offset="1" stop-color="#121212"/>
+    </linearGradient>
+    <radialGradient id="galaxy-haze" cx="0" cy="0" r="1" gradientTransform="matrix(190 0 0 190 1082 232)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6747" stop-opacity=".15"/>
+      <stop offset=".55" stop-color="#5CE1F5" stop-opacity=".055"/>
+      <stop offset="1" stop-color="#0A0A0A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="arm-coral" x1="900" y1="225" x2="1230" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6747" stop-opacity="0"/>
+      <stop offset=".47" stop-color="#FF6747" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#FF6747" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="arm-cyan" x1="900" y1="180" x2="1260" y2="310" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5CE1F5" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#5CE1F5" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#5CE1F5" stop-opacity=".04"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" stroke="#FFF" stroke-opacity=".027"/>
+    </pattern>
+    <filter id="soft-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="core-glow" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="460" rx="26" fill="url(#canvas)"/>
+  <rect width="1440" height="460" rx="26" fill="url(#grid)"/>
+  <circle cx="1082" cy="232" r="190" fill="url(#galaxy-haze)"/>
+
+  <g transform="translate(82 66)">
+    <rect width="48" height="48" rx="15" fill="#FF6747"/>
+    <path d="M13 12h7v9h10v-9h7v24h-7v-9H20v9h-7V12Z" fill="#0A0A0A"/>
+    <circle cx="36.5" cy="34.5" r="2.5" fill="#0A0A0A"/>
+  </g>
+  <text x="146" y="96" fill="#F7F5F2" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="750" letter-spacing="-.5">HackHub</text>
+  <text x="82" y="169" fill="#65DDED" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="12" font-weight="700" letter-spacing="2">OPEN-SOURCE HACKATHON PLATFORM</text>
+  <circle cx="70" cy="165" r="2.5" fill="#65DDED"/>
+
+  <text x="78" y="251" fill="#F7F5F2" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="67" font-weight="760" letter-spacing="-3.8">Make room for</text>
+  <text x="78" y="323" fill="#FF6747" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="67" font-weight="760" letter-spacing="-3.8">big ideas.</text>
+  <text x="82" y="374" fill="#B7B4B0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17">Find an event. Build together. Make it count.</text>
+  <path d="M82 408h48" stroke="#FF6747" stroke-width="3" stroke-linecap="round"/>
+  <text x="145" y="413" fill="#8C8884" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="10" font-weight="600" letter-spacing="1.5">DISCOVER · BUILD · CELEBRATE</text>
+
+  <g aria-hidden="true">
+    <circle cx="1082" cy="232" r="178" stroke="#5CE1F5" stroke-opacity=".45"/>
+    <circle cx="1082" cy="232" r="141" stroke="#FF6747" stroke-opacity=".32"/>
+    <circle cx="1082" cy="232" r="104" stroke="#FFF" stroke-opacity=".085" stroke-dasharray="2 10"/>
+
+    <path d="M1082 232c22-46 100-83 173-65 76 18 110 77 80 119-27 38-105 46-166 18-72-34-106-99-81-150 24-49 99-74 175-54 58 15 101 52 117 91" stroke="url(#arm-coral)" stroke-width="17" stroke-linecap="round" opacity=".25" filter="url(#soft-glow)"/>
+    <path d="M1082 232c22-46 100-83 173-65 76 18 110 77 80 119-27 38-105 46-166 18-72-34-106-99-81-150 24-49 99-74 175-54 58 15 101 52 117 91" stroke="url(#arm-coral)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M1082 232c-26 44-99 75-165 51-60-22-80-74-48-112 35-41 112-47 171-15 65 35 89 99 56 145-34 47-116 63-190 35-40-15-70-40-85-69" stroke="url(#arm-cyan)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1082 232c-4-40 28-93 75-118 42-22 85-13 92 18 8 35-27 82-77 105-58 26-113 14-124-26-11-42 25-100 82-132 26-15 53-23 76-24" stroke="url(#arm-cyan)" stroke-width="1.5" stroke-linecap="round" opacity=".78"/>
+
+    <circle cx="1082" cy="232" r="48" fill="#FF6747" fill-opacity=".32" filter="url(#core-glow)"/>
+    <circle cx="1082" cy="232" r="24" fill="#0D0D0D" stroke="#FF6747" stroke-width="1.5"/>
+    <path d="M1070 220h7v8h10v-8h7v24h-7v-9h-10v9h-7v-24Z" fill="#FF6747"/>
+    <circle cx="1095.5" cy="241.5" r="2.5" fill="#FF6747"/>
+
+    <circle cx="1254" cy="165" r="3.5" fill="#FF6747"/>
+    <circle cx="1179" cy="304" r="3" fill="#5CE1F5"/>
+    <circle cx="939" cy="167" r="2.5" fill="#F7F5F2" fill-opacity=".8"/>
+    <circle cx="904" cy="269" r="3" fill="#5CE1F5"/>
+    <circle cx="1281" cy="290" r="2" fill="#F7F5F2" fill-opacity=".65"/>
+    <circle cx="1011" cy="343" r="2" fill="#FF6747" fill-opacity=".8"/>
+    <circle cx="1167" cy="91" r="2" fill="#F7F5F2" fill-opacity=".65"/>
+
+    <text x="884" y="127" fill="#65DDED" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="9" font-weight="700" letter-spacing="1.5">DISCOVER</text>
+    <text x="1266" y="216" fill="#FF8064" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="9" font-weight="700" letter-spacing="1.5">BUILD</text>
+    <text x="1200" y="424" fill="#65DDED" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="9" font-weight="700" letter-spacing="1.5">CELEBRATE</text>
+  </g>
+</svg>

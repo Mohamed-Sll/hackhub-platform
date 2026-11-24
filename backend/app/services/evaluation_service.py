@@ -117,6 +117,12 @@ class EvaluationService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         return await self.eval_repo.get_by_project(project_id)
 
+    async def get_judge_project_evaluation(self, event_id: UUID, project_id: UUID, judge_id: UUID) -> List[Evaluation]:
+        project = await self.project_repo.get(project_id)
+        if project is None or project.event_id != event_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        return await self.eval_repo.get_by_project_and_judge(project_id, judge_id)
+
     async def get_ranking(self, event_id: UUID) -> List[RankResponse]:
         rows = await self.eval_repo.get_ranking_data(event_id)
         rankings = []

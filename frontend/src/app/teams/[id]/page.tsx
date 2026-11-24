@@ -19,8 +19,10 @@ import { generateInitials, getRoleBadgeColor } from '@/lib/utils'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import type { CreateProjectRequest, TeamMember } from '@/types'
+import { LocalizedText, translateCurrent, useI18n } from '@/lib/i18n'
 
 export default function TeamDetailPage() {
+  const { t } = useI18n()
   const params = useParams()
   const router = useRouter()
   const teamId = params.id as string
@@ -47,55 +49,55 @@ export default function TeamDetailPage() {
     navigator.clipboard.writeText(team.invitation_code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-    toast.success('Invite code copied!')
+    toast.success(translateCurrent('Invite code copied!'))
   }
 
   const handleInviteMember = async () => {
     if (!inviteUserId.trim()) return
     try {
       await inviteMember.mutateAsync(inviteUserId.trim())
-      toast.success('Invitation sent!')
+      toast.success(translateCurrent('Invitation sent!'))
       setInviteUserId('')
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to invite member')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to invite member'))
     }
   }
 
   const handleLeaveTeam = async () => {
     try {
       await leaveTeam.mutateAsync()
-      toast.success('Left team successfully')
+      toast.success(translateCurrent('Left team successfully'))
       router.push('/teams')
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to leave team')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to leave team'))
     }
   }
 
   const handleRemoveMember = async (memberId: string) => {
     try {
       await removeMember.mutateAsync(memberId)
-      toast.success('Member removed')
+      toast.success(translateCurrent('Member removed'))
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to remove member')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to remove member'))
     }
   }
 
   const handleCreateProject = async (data: CreateProjectRequest) => {
     try {
       await createProject.mutateAsync(data)
-      toast.success('Project created!')
+      toast.success(translateCurrent('Project created!'))
       setShowProjectForm(false)
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to create project')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to create project'))
     }
   }
 
   const handleTransferLeadership = async (userId: string) => {
     try {
       await transferLeadership.mutateAsync(userId)
-      toast.success('Leadership transferred')
+      toast.success(translateCurrent('Leadership transferred'))
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to transfer leadership')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to transfer leadership'))
     }
   }
 
@@ -110,8 +112,7 @@ export default function TeamDetailPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Link href="/teams" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
             <ArrowLeft className="h-4 w-4" />
-            Back to Teams
-          </Link>
+            <LocalizedText text="Back to Teams" />{' '}</Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
@@ -130,11 +131,11 @@ export default function TeamDetailPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Members ({team.members?.length || 0})</CardTitle>
+                  <CardTitle className="text-lg"><LocalizedText text="Members (" />{team.members?.length || 0}<LocalizedText text=")" /></CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {team.members?.map((member: TeamMember) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors">
+                    <div key={member.id} className="flex items-center justify-between p-3 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback>{generateInitials(member.full_name || member.username || 'U')}</AvatarFallback>
@@ -146,19 +147,19 @@ export default function TeamDetailPage() {
                               <Crown className="inline h-3 w-3 text-yellow-500 ml-1" />
                             )}
                           </p>
-                          <p className="text-xs text-muted-foreground">@{member.username}</p>
+                          <p className="text-xs text-muted-foreground"><LocalizedText text="@" />{member.username}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={getRoleBadgeColor(member.role)}>
-                          {roleLabels[member.role] || member.role}
+                          <LocalizedText text={roleLabels[member.role] || member.role} />
                         </Badge>
                         {isLeader && member.user_id !== user?.id && (
                           <>
                             <Button
                               variant="ghost"
                               size="icon"
-                              title="Transfer leadership"
+                              title={t('Transfer leadership')}
                               onClick={() => handleTransferLeadership(member.user_id)}
                             >
                               <Crown className="h-4 w-4" />
@@ -166,7 +167,7 @@ export default function TeamDetailPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              title="Remove member"
+                              title={t('Remove member')}
                               onClick={() => handleRemoveMember(member.id)}
                               className="text-destructive"
                             >
@@ -185,37 +186,43 @@ export default function TeamDetailPage() {
               {isLeader && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Team Actions</CardTitle>
+                    <CardTitle className="text-lg"><LocalizedText text="Team Actions" /></CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Invite Code</label>
+                      <label className="text-sm font-medium"><LocalizedText text="Invite Code" /></label>
                       <div className="flex gap-2">
                         <code className="flex-1 px-3 py-2 rounded-md bg-muted text-sm font-mono">
                           {team.invitation_code}
                         </code>
-                        <Button variant="outline" size="icon" onClick={handleCopyInviteCode}>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label={t(copied ? 'Invite code copied!' : 'Copy invite code')}
+                          onClick={handleCopyInviteCode}
+                        >
                           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Invite by User ID</label>
+                      <label htmlFor="team-invite-user-id" className="text-sm font-medium"><LocalizedText text="Invite by User ID" /></label>
                       <div className="flex gap-2">
                         <Input
+                          id="team-invite-user-id"
                           placeholder="user ID"
                           value={inviteUserId}
                           onChange={(e) => setInviteUserId(e.target.value)}
                         />
-                        <Button variant="outline" onClick={handleInviteMember}>
+                        <Button type="button" variant="outline" aria-label={t('Invite member')} onClick={handleInviteMember}>
                           <UserPlus className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
 
                     <Separator />
-                    <p className="text-xs text-muted-foreground">Transfer leadership to another accepted member before leaving the team.</p>
+                    <p className="text-xs text-muted-foreground"><LocalizedText text="Transfer leadership to another accepted member before leaving the team." /></p>
                   </CardContent>
                 </Card>
               )}
@@ -225,8 +232,7 @@ export default function TeamDetailPage() {
                   <CardContent className="pt-6">
                     <Button variant="destructive" className="w-full" onClick={handleLeaveTeam}>
                       <LogOut className="mr-2 h-4 w-4" />
-                      Leave Team
-                    </Button>
+                      <LocalizedText text="Leave Team" />{' '}</Button>
                   </CardContent>
                 </Card>
               )}
@@ -235,8 +241,7 @@ export default function TeamDetailPage() {
                 <Card>
                   <CardContent className="pt-6">
                     <Button className="w-full" onClick={() => setShowProjectForm(true)}>
-                      Create Project
-                    </Button>
+                      <LocalizedText text="Create Project" />{' '}</Button>
                   </CardContent>
                 </Card>
               )}
@@ -244,7 +249,7 @@ export default function TeamDetailPage() {
               {isLeader && showProjectForm && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">New Project</CardTitle>
+                    <CardTitle className="text-lg"><LocalizedText text="New Project" /></CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ProjectForm

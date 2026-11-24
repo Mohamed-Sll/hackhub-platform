@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { generateInitials } from '@/lib/utils'
 import type { Team } from '@/types'
+import { LocalizedText } from '@/lib/i18n'
 
 interface TeamCardProps {
   team: Team
@@ -23,17 +24,15 @@ export function TeamCard({ team, index = 0, linked = true }: TeamCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -4 }}
     >
-        <Card className="h-full hover:shadow-lg transition-all duration-300">
+        <Card className="h-full">
           <CardHeader>
             <div className="flex items-start justify-between">
               <CardTitle className="text-lg">{team.name}</CardTitle>
               {team.leader && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <Crown className="h-3 w-3 text-yellow-500" />
-                  Leader
-                </Badge>
+                  <LocalizedText text="Leader" />{' '}</Badge>
               )}
             </div>
           </CardHeader>
@@ -43,7 +42,7 @@ export function TeamCard({ team, index = 0, linked = true }: TeamCardProps) {
             )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span>{team.members?.length || 0} members</span>
+              <span>{team.members?.length || 0} <LocalizedText text="members" /></span>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
@@ -58,7 +57,7 @@ export function TeamCard({ team, index = 0, linked = true }: TeamCardProps) {
                 ))}
                 {extraCount > 0 && (
                   <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-medium">
-                    +{extraCount}
+                    <LocalizedText text="+" />{extraCount}
                   </div>
                 )}
               </div>

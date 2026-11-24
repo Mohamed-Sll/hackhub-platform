@@ -38,10 +38,20 @@ quantidade de avaliacoes.
 
 Uma avaliacao invalida o cache Redis do evento. Sem Redis, o ranking consulta a
 base diretamente. O stream SSE recalcula e envia o ranking periodicamente.
+O endpoint de comentarios exige autenticacao: organizador dono/admin ve todas as
+avaliacoes; cada jurado ve apenas as proprias. Sem atribuicao de jurados por
+evento, qualquer conta `judge` ainda pode submeter uma avaliacao.
+
+Inscricoes publicas sem conta e tratamento dos dados pessoais estao em
+`MEMORIA/fluxos/inscricao-evento.md`.
 
 ## Certificado
 
 Depois do evento, o servico gera no maximo um certificado por
-utilizador/evento/tipo. O snapshot e autenticado com segredo do servidor, o QR
-aponta para a rota publica configurada por `APP_URL`, e o download protegido
-produz PDF. A verificacao publica recalcula o hash antes de aceitar o codigo.
+utilizador/evento/tipo. Novos certificados autenticam identidade e snapshot
+com HMAC usando o segredo do servidor; a verificacao ainda aceita o formato
+sem chave usado por certificados antigos. O QR aponta para a rota publica
+configurada por `APP_URL`, e o download protegido valida a assinatura antes de
+produzir o PDF. Ver
+`MEMORIA/problemas/assinatura-certificados-legados.md` para os limites do
+formato antigo.

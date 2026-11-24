@@ -55,7 +55,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./migration-test.db
           REDIS_URL: ""
-          SECRET_KEY: test-secret-key
+          SECRET_KEY: hackhub-ci-test-secret-key-with-at-least-32-characters
         run: |
           alembic upgrade head
           alembic check
@@ -63,7 +63,7 @@ jobs:
         env:
           DATABASE_URL: sqlite+aiosqlite:///./test.db
           REDIS_URL: ""
-          SECRET_KEY: test-secret-key
+          SECRET_KEY: hackhub-ci-test-secret-key-with-at-least-32-characters
         run: |
           pytest tests/ -v --cov=app --cov-report=term-missing
 
@@ -107,6 +107,26 @@ jobs:
         run: npx tsc --noEmit
       - name: Build
         run: npm run build
+
+  frontend-e2e:
+    name: Frontend End-to-End Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run browser flows
+        run: npm run test:e2e
 
   # Docker build checks
   docker-build:

@@ -1,88 +1,93 @@
 'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import {
+  Award,
+  CalendarDays,
+  Home,
   LayoutDashboard,
-  Calendar,
-  Users,
-  FolderKanban,
-  Trophy,
-  Settings,
-  Users2,
-  BarChart3,
+  LogIn,
+  UsersRound,
+  UserRound,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/lib/i18n'
 
-const sidebarLinks = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/events', label: 'Events', icon: Calendar },
-  { href: '/teams', label: 'Teams', icon: Users },
-  { href: '/dashboard/events', label: 'Projects', icon: FolderKanban },
-  { href: '/events', label: 'Ranking', icon: Trophy },
-  { href: '/profile', label: 'Settings', icon: Settings },
-]
-
-const adminLinks = [
-  { href: '/dashboard/events', label: 'Users', icon: Users2 },
-  { href: '/dashboard', label: 'Analytics', icon: BarChart3 },
+const publicLinks = [
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/events', label: 'Discover events', icon: CalendarDays },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const { user, isAuthenticated } = useAuth()
+  const { t } = useI18n()
+  const canManage = user?.role === 'admin' || user?.role === 'organizer'
+
+  const groups = [
+    { label: 'Discover', links: publicLinks },
+    ...(canManage
+      ? [{
+          label: 'Organizer',
+          links: [
+            { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+            { href: '/dashboard/events', label: 'Manage events', icon: CalendarDays },
+            { href: '/dashboard/certificates', label: 'Certificates', icon: Award },
+          ],
+        }]
+      : []),
+    ...(isAuthenticated
+      ? [{
+          label: 'Your space',
+          links: [
+            { href: '/teams', label: 'My teams', icon: UsersRound },
+            { href: '/profile', label: 'Profile', icon: UserRound },
+          ],
+        }]
+      : [{
+          label: 'Account',
+          links: [{ href: '/auth/login', label: 'Organizer sign in', icon: LogIn }],
+        }]),
+  ]
 
   return (
-    <aside className="w-64 min-h-screen border-r bg-card hidden lg:block">
-      <div className="p-4 space-y-1">
-        {sidebarLinks.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {link.label}
-            </Link>
-          )
-        })}
-        {isAdmin && (
-          <>
-            <div className="pt-4 pb-2">
-              <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Admin
-              </p>
-            </div>
-            {adminLinks.map((link) => {
+    <aside className="app-rail" aria-label="Main navigation">
+      <Link href="/" className="rail-brand" aria-label={`HackHub — ${t('Home')}`}>
+        <Image src="/icon.svg" alt="" width={31} height={31} className="rail-mark" aria-hidden="true" />
+        <span>HackHub</span>
+      </Link>
+
+      <nav className="rail-navigation">
+        {groups.map((group) => (
+          <section key={group.label} className="rail-group" aria-label={t(group.label)}>
+            <h2 className="rail-label">{t(group.label)}</h2>
+            {group.links.map((link) => {
               const Icon = link.icon
-              const isActive = pathname === link.href
+              // No dashboard, ativo só a página geral ou a secção atual.
+              const active = pathname === link.href || (
+                link.href !== '/' && link.href !== '/dashboard' && pathname.startsWith(`${link.href}/`)
+              )
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  )}
+                  className={cn('rail-link', active && 'is-active')}
+                  aria-current={active ? 'page' : undefined}
                 >
-                  <Icon className="h-4 w-4" />
-                  {link.label}
+                  <Icon className="rail-icon" aria-hidden="true" />
+                  <span>{t(link.label)}</span>
                 </Link>
               )
             })}
-          </>
-        )}
+          </section>
+        ))}
+      </nav>
+
+      <div className="rail-bottom">
+        <p className="rail-note">{t('Open-source tools for the people who build hackathons.')}</p>
       </div>
     </aside>
   )

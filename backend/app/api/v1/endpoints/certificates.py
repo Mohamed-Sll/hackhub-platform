@@ -17,17 +17,24 @@ from app.core.deps import (
     require_event_manager,
 )
 from app.models.user import User, UserRole
-from app.schemas.certificate import CertificateResponse
+from app.schemas.certificate import CertificateResponse, CertificateVerificationResponse
 from app.services.certificate_service import CertificateService
 
 router = APIRouter(prefix="/certificates", tags=["Certificates"])
 
 
-@router.get("/verify/{code}", response_model=CertificateResponse)
+@router.get("/verify/{code}", response_model=CertificateVerificationResponse)
 async def verify_certificate(code: str, db: AsyncSession = Depends(get_db)):
     service = CertificateService(db)
     certificate = await service.verify_certificate(code)
-    return certificate
+    extra = certificate.extra_data or {}
+    return CertificateVerificationResponse(
+        verification_code=certificate.verification_code,
+        type=certificate.type.value,
+        recipient_name=str(extra.get("user_name") or "Participant"),
+        event_title=str(extra.get("event_title") or "Hackathon"),
+        issued_at=certificate.issued_at,
+    )
 
 
 @router.get("/my", response_model=List[CertificateResponse])
@@ -61,6 +68,7 @@ async def download_certificate_pdf(
     certificate = await service.get_certificate(certificate_id)
     if current_user.role != UserRole.ADMIN and certificate.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    await service.verify_certificate(certificate.verification_code)
     extra = certificate.extra_data or {}
     user_name = str(extra.get("user_name", "Participant"))
     event_title = str(extra.get("event_title", "Hackathon"))

@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     AUTH_RATE_LIMIT_REGISTER: str = "10/minute"
     AUTH_RATE_LIMIT_RESET: str = "5/minute"
     AUTH_RATE_LIMIT_REFRESH: str = "30/minute"
+    EVENT_REGISTRATION_RATE_LIMIT: str = "10/hour"
+    TEAM_JOIN_RATE_LIMIT: str = "10/minute"
 
     SMTP_SERVER: str = Field(
         default="smtp.gmail.com",
@@ -48,7 +50,6 @@ class Settings(BaseSettings):
 
     AI_RATE_LIMIT_ASK: str = "20/minute"
     AI_RATE_LIMIT_EVALUATE: str = "5/minute"
-    AI_RATE_LIMIT_SUGGEST: str = "3/minute"
     AI_DAILY_TOKEN_LIMIT: int = 100000
 
     PLAN_LIMITS: dict = {

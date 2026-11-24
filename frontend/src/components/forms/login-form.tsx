@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
+import { LocalizedText, translateCurrent, useI18n } from '@/lib/i18n'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,7 +20,9 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const { t } = useI18n()
   const { login, isLoggingIn } = useAuth()
 
   const {
@@ -31,10 +35,12 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data)
-      toast.success('Welcome back!')
+      const user = await login(data)
+      toast.success(translateCurrent('Welcome back!'))
+      // Depois do login, encaminho a pessoa pela função da conta.
+      router.replace(user.role === 'admin' || user.role === 'organizer' ? '/dashboard' : '/events')
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Login failed. Please try again.')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Login failed. Please try again.'))
     }
   }
 
@@ -58,6 +64,8 @@ export function LoginForm() {
         rightElement={
           <button
             type="button"
+            aria-label={t(showPassword ? 'Hide password' : 'Show password')}
+            aria-pressed={showPassword}
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
@@ -70,17 +78,14 @@ export function LoginForm() {
           href="/auth/forgot-password"
           className="text-sm text-primary hover:underline"
         >
-          Forgot password?
-        </Link>
+          <LocalizedText text="Forgot password?" />{' '}</Link>
       </div>
       <Button type="submit" className="w-full" loading={isLoggingIn}>
-        Sign In
-      </Button>
+        <LocalizedText text="Sign In" />{' '}</Button>
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
+        <LocalizedText text="Don't have an account?" />{' '}
         <Link href="/auth/register" className="text-primary hover:underline font-medium">
-          Register
-        </Link>
+          <LocalizedText text="Register" />{' '}</Link>
       </p>
     </form>
   )

@@ -15,7 +15,7 @@ O codigo vive em `backend/app/`:
 - `schemas/`: contratos Pydantic de entrada e saida.
 - `services/`: regras de negocio e autorizacao dependente do dominio.
 - `repositories/`: consultas SQLAlchemy reutilizadas pelos servicos.
-- `models/`: modelos ORM, constraints e relacoes.
+- `models/`: modelos ORM, constraints e relacoes, incluindo inscricoes publicas por evento.
 - `core/`: configuracao, base de dados, JWT, sessoes e rate limiting.
 - `utils/`: integracoes auxiliares de email e geracao de codigos.
 

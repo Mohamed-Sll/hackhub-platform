@@ -10,8 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.evaluation import Evaluation, EvaluationScore
 from app.models.event import Event
+from app.models.event_registration import EventRegistration
 from app.models.project import Project
-from app.models.team import Team, TeamMember
+from app.models.team import InviteStatus, Team, TeamMember
 from app.models.user import User, UserRole
 
 
@@ -34,21 +35,30 @@ class ExportService:
             select(User, TeamMember, Team)
             .join(TeamMember, User.id == TeamMember.user_id)
             .join(Team, TeamMember.team_id == Team.id)
-            .where(Team.event_id == event_id)
+            .where(Team.event_id == event_id, TeamMember.status == InviteStatus.ACCEPTED)
         )
-        rows = result.all()
+        registrations = await self.db.execute(select(EventRegistration).where(EventRegistration.event_id == event_id))
         headers = ["Name", "Email", "University", "Team", "Role", "Registered At"]
-        data = [
-            [
-                r.User.full_name,
-                r.User.email,
-                r.User.university or "",
-                r.Team.name,
-                r.TeamMember.role.value,
-                str(r.TeamMember.created_at),
-            ]
-            for r in rows
-        ]
+        data = []
+        known_emails = set()
+        for registration in registrations.scalars().all():
+            known_emails.add(registration.email.casefold())
+            data.append(
+                [registration.full_name, registration.email, "", "", "participant", str(registration.created_at)]
+            )
+        for row in result.all():
+            if row.User.email.casefold() in known_emails:
+                continue
+            data.append(
+                [
+                    row.User.full_name,
+                    row.User.email,
+                    row.User.university or "",
+                    row.Team.name,
+                    row.TeamMember.role.value,
+                    str(row.TeamMember.created_at),
+                ]
+            )
         return self._stream_response(headers, data, fmt, "participants")
 
     async def export_projects(self, event_id: UUID, user: User, fmt: str = "xlsx"):

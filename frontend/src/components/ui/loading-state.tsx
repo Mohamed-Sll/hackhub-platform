@@ -1,5 +1,7 @@
+'use client'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 interface LoadingStateProps {
   message?: string
@@ -8,6 +10,7 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({ message = 'Loading...', className, size = 'lg' }: LoadingStateProps) {
+  const { t } = useI18n()
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8',
@@ -17,7 +20,7 @@ export function LoadingState({ message = 'Loading...', className, size = 'lg' }:
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 gap-4', className)}>
       <Loader2 className={cn('animate-spin text-primary', sizeClasses[size])} />
-      <p className="text-muted-foreground text-sm">{message}</p>
+      <p className="text-muted-foreground text-sm">{t(message)}</p>
     </div>
   )
 }

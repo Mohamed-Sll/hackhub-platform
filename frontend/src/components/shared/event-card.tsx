@@ -1,86 +1,36 @@
-'use client'
+import { eventStatusText, LocalizedDate, LocalizedText } from '@/lib/i18n'
 import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { Calendar, MapPin, Users } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { ArrowRight, CalendarDays, MapPin, Monitor } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { formatDate, cn } from '@/lib/utils'
 import type { Event, EventStatus } from '@/types'
 
 const statusConfig: Record<EventStatus, { label: string; variant: 'default' | 'success' | 'warning' | 'secondary' | 'destructive' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
-  published: { label: 'Published', variant: 'default' },
-  in_progress: { label: 'In Progress', variant: 'success' },
-  closed: { label: 'Closed', variant: 'warning' },
+  published: { label: 'Registration open', variant: 'default' },
+  in_progress: { label: 'In progress', variant: 'success' },
+  closed: { label: 'Completed', variant: 'warning' },
 }
 
-interface EventCardProps {
-  event: Event
-  index?: number
-}
-
-export function EventCard({ event, index = 0 }: EventCardProps) {
+export function EventCard({ event }: { event: Event; index?: number }) {
   const status = statusConfig[event.status]
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -4 }}
-    >
-      <Link href={`/events/${event.id}`}>
-        <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300 group">
-          <div className="relative h-48 overflow-hidden">
-            <div
-              className={cn(
-                'absolute inset-0 bg-gradient-to-br',
-                event.cover_image
-                  ? ''
-                  : 'from-blue-500/20 via-purple-500/20 to-pink-500/20'
-              )}
-            >
-              {event.cover_image && (
-                <Image
-                  src={event.cover_image}
-                  alt={event.title}
-                  fill
-                  unoptimized
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              )}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute top-3 right-3">
-              <Badge variant={status.variant}>{status.label}</Badge>
-            </div>
-            <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-white font-semibold text-lg leading-tight line-clamp-2">
-                {event.title}
-              </h3>
-            </div>
-          </div>
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4 shrink-0" />
-              <span className="truncate">
-                {formatDate(event.start_date, 'MMM d')} - {formatDate(event.end_date, 'MMM d, yyyy')}
-              </span>
-            </div>
-            {event.location && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{event.location}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4 shrink-0" />
-              <span>Teams of {event.max_team_size}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-    </motion.div>
+    <Link href={`/events/${event.id}`} className="event-list-row">
+      <div className="event-list-icon" aria-hidden="true">
+        <CalendarDays className="h-4 w-4" />
+      </div>
+      <div className="event-list-main">
+        <div className="event-list-title">
+          <h2>{event.title}</h2>
+          <Badge variant={status.variant}><LocalizedText text={status.label} /></Badge>
+        </div>
+        <div className="event-list-meta">
+          <span><CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />{<LocalizedDate value={event.start_date} pattern="short" />} – {<LocalizedDate value={event.end_date} pattern="short" />}</span>
+          <span>{event.is_online ? <Monitor className="h-3.5 w-3.5" aria-hidden="true" /> : <MapPin className="h-3.5 w-3.5" aria-hidden="true" />}{event.is_online ? <LocalizedText text="Online" /> : event.location || <LocalizedText text="Location to be announced" />}</span>
+          <span><LocalizedText text="Teams up to" />{' '}{event.max_team_size}</span>
+        </div>
+      </div>
+      <ArrowRight className="event-list-arrow h-4 w-4" aria-hidden="true" />
+    </Link>
   )
 }

@@ -1,16 +1,17 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Lock } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { AuthLayout } from '@/components/layout/auth-layout'
 import { apiClient } from '@/lib/api'
 import toast from 'react-hot-toast'
+import { LocalizedText, translateCurrent } from '@/lib/i18n'
 
 const schema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(256),
@@ -24,6 +25,7 @@ type FormData = z.infer<typeof schema>
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -38,16 +40,17 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: FormData) => {
     if (!token) {
-      toast.error('Invalid reset link')
+      toast.error(translateCurrent('Invalid reset link'))
       return
     }
     setIsLoading(true)
     try {
       await apiClient.auth.confirmReset(token, data.password)
-      toast.success('Password reset successfully! Please sign in.')
+      toast.success(translateCurrent('Password reset successfully! Please sign in.'))
       router.push('/auth/login')
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || 'Failed to reset password')
+      setErrorMessage(error?.response?.data?.detail || 'This reset link may have expired. Request a new one and use the latest email.')
+      toast.error(translateCurrent(error?.response?.data?.detail || 'Failed to reset password'))
     } finally {
       setIsLoading(false)
     }
@@ -55,53 +58,47 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-        <Card className="glass-card">
-          <CardContent className="py-8 text-center">
-            <p className="text-destructive font-medium">Invalid or expired reset link.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthLayout
+        eyebrow="Link unavailable"
+        title="This reset link is missing"
+        description="Request a new reset email, then use the latest link from your inbox."
+        storyTitle={<><LocalizedText text="Start again," /><br /><LocalizedText text="safely" /><span><LocalizedText text="." /></span></>}
+        storyDescription="Password links expire so someone else cannot use an old email."
+      >
+        <Button asChild><Link href="/auth/forgot-password"><LocalizedText text="Request a new link" /></Link></Button>
+        <p className="auth-links mt-4"><span><LocalizedText text="Remembered your password?" /></span><Link href="/auth/login"><LocalizedText text="Sign in" /></Link></p>
+      </AuthLayout>
     )
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <Card className="glass-card">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Reset Password</CardTitle>
-            <CardDescription>Enter your new password</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Input
-                label="New Password"
-                type="password"
-                placeholder="Enter new password"
-                icon={<Lock className="h-4 w-4" />}
-                error={errors.password?.message}
-                {...register('password')}
-              />
-              <Input
-                label="Confirm Password"
-                type="password"
-                placeholder="Confirm new password"
-                icon={<Lock className="h-4 w-4" />}
-                error={errors.confirm_password?.message}
-                {...register('confirm_password')}
-              />
-              <Button type="submit" className="w-full" loading={isLoading}>
-                Reset Password
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+    <AuthLayout
+      eyebrow="Password reset"
+      title="Choose a new password"
+      description="Use at least 8 characters for your new password."
+      storyTitle={<><LocalizedText text="A fresh start" /><span><LocalizedText text="." /></span></>}
+      storyDescription="Your password reset link gives you a safe way back into your HackHub workspace."
+    >
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {errorMessage && <p className="auth-error" role="alert">{errorMessage} <Link href="/auth/forgot-password"><LocalizedText text="Request a new link" /></Link></p>}
+        <Input
+          label="New password"
+          type="password"
+          placeholder="Enter new password"
+          icon={<Lock className="h-4 w-4" />}
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <Input
+          label="Confirm password"
+          type="password"
+          placeholder="Confirm new password"
+          icon={<Lock className="h-4 w-4" />}
+          error={errors.confirm_password?.message}
+          {...register('confirm_password')}
+        />
+        <Button type="submit" loading={isLoading}><LocalizedText text="Update password" /></Button>
+      </form>
+    </AuthLayout>
   )
 }

@@ -26,6 +26,30 @@ export function useEvent(id: string) {
   })
 }
 
+export function useEventRegistrations(eventId: string, page = 1, size = 25) {
+  return useQuery({
+    queryKey: ['events', eventId, 'registrations', page, size],
+    queryFn: () => apiClient.events.listRegistrations(eventId, page, size),
+    enabled: !!eventId,
+  })
+}
+
+export function useRegisterForEvent(eventId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { full_name: string; email: string }) => apiClient.events.register(eventId, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events', eventId, 'registrations'] }),
+  })
+}
+
+export function useDeleteEventRegistration(eventId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (registrationId: string) => apiClient.events.deleteRegistration(eventId, registrationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events', eventId, 'registrations'] }),
+  })
+}
+
 export function useCreateEvent() {
   const queryClient = useQueryClient()
   return useMutation({

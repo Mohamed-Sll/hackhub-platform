@@ -88,6 +88,11 @@ async def judge_user(db_session):
     return await _create_user(db_session, role=UserRole.JUDGE, suffix="judge")
 
 
+@pytest_asyncio.fixture
+async def second_judge_user(db_session):
+    return await _create_user(db_session, role=UserRole.JUDGE, suffix="judge2")
+
+
 async def _auth_headers(db_session, user: User) -> dict:
     session = AuthSession(
         user_id=user.id,
@@ -123,3 +128,8 @@ async def organizer_headers(db_session, organizer_user):
 @pytest_asyncio.fixture
 async def judge_headers(db_session, judge_user):
     return await _auth_headers(db_session, judge_user)
+
+
+@pytest_asyncio.fixture
+async def second_judge_headers(db_session, second_judge_user):
+    return await _auth_headers(db_session, second_judge_user)

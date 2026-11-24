@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, Field
+from pydantic import AliasPath, BaseModel, Field, field_validator
 
 
 class TeamCreate(BaseModel):
@@ -15,7 +15,7 @@ class TeamInvite(BaseModel):
 
 
 class TeamJoin(BaseModel):
-    invitation_code: str
+    invitation_code: str = Field(..., min_length=8, max_length=8, pattern=r"^[A-Z0-9]{8}$")
 
 
 class TeamLeadershipTransfer(BaseModel):
@@ -48,6 +48,17 @@ class TeamResponse(BaseModel):
     members: List[TeamMemberResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+class PublicTeamResponse(TeamResponse):
+    @field_validator("members", mode="before")
+    @classmethod
+    def hide_pending_invites(cls, members):
+        return [
+            member
+            for member in members
+            if getattr(getattr(member, "status", None), "value", getattr(member, "status", None)) == "accepted"
+        ]
 
 
 class TeamPrivateResponse(TeamResponse):

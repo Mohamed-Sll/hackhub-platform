@@ -5,6 +5,8 @@ para o tema em causa. O código continua a ser a fonte de verdade.
 
 ## Rotas
 
+- Product scope and staged plan: `docs/PRODUCT_PLAN.md`
+- Public event registration and personal data: `MEMORIA/fluxos/inscricao-evento.md`
 - Estado funcional, alcance e limitações: `MEMORIA/ESTADO.md`
 - Estrutura de módulos, fronteiras e execução: `MEMORIA/ARQUITETURA.md`
 - Entidades, relações e invariantes de dados: `MEMORIA/db/schema.md`
@@ -16,10 +18,16 @@ para o tema em causa. O código continua a ser a fonte de verdade.
   `MEMORIA/fluxos/dashboard.md`
 - Razão para SQLite e Redis opcional:
   `MEMORIA/decisoes/001-sqlite-e-redis-opcional.md`
+- Direção visual e tokens principais da interface:
+  `MEMORIA/decisoes/002-sistema-visual-hackhub.md`
 - Separação obrigatória entre tokens de email e sessão:
   `MEMORIA/problemas/tokens-de-acao-como-sessao.md`
+- Compatibilidade e limites das assinaturas de certificados antigos:
+  `MEMORIA/problemas/assinatura-certificados-legados.md`
 - Propriedade única da política CORS:
   `MEMORIA/problemas/cors-no-proxy.md`
+- Serialização assíncrona após transferir liderança de equipa:
+  `MEMORIA/problemas/serializacao-transferencia-lideranca.md`
 
 ## Rotas reservadas
 

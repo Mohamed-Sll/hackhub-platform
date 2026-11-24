@@ -1,174 +1,195 @@
 <div align="center">
-  <img src="assets/logo.svg" alt="HackHub Logo" width="120" height="120" />
-  <h1>HackHub</h1>
-  <p>Open-source hackathon management platform.</p>
+  <img src="assets/hackhub-banner.svg" alt="HackHub — open-source hackathon platform to discover events and build together" width="100%" />
+
+  <p><strong>Open-source hackathon management, from the first event draft to verified certificates.</strong></p>
+
+  <p>
+    <a href="https://github.com/mohamedsillahhh-cloud/hackhub-platform/actions/workflows/ci.yml"><img src="https://github.com/mohamedsillahhh-cloud/hackhub-platform/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-8B5CF6.svg" alt="MIT License" /></a>
+    <img src="https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white" alt="Python 3.12" />
+    <img src="https://img.shields.io/badge/Next.js-16-111827.svg?logo=nextdotjs&logoColor=white" alt="Next.js 16" />
+  </p>
+
+  <p>
+    <a href="#features">Features</a> ·
+    <a href="#get-started">Get started</a> ·
+    <a href="STACK.md">Technology stack</a> ·
+    <a href="docs/ARCHITECTURE.md">Architecture</a> ·
+    <a href="docs/PRODUCT_PLAN.md">Product plan</a> ·
+    <a href="CONTRIBUTING.md">Contributing</a>
+  </p>
 </div>
 
-HackHub combines a Next.js frontend with a FastAPI API for running events,
-forming teams, submitting projects, judging entries, publishing rankings and
-issuing verifiable PDF certificates. The project has a deployment-ready
-baseline for a controlled single-instance installation; see
-[Current status](#current-status) for the operational boundaries.
+HackHub is a full-stack platform for running hackathons and innovation
+challenges. Organizers manage events, teams, challenges, judging, and results
+in one place. Participants build together, submit projects, follow rankings,
+and receive certificates that can be verified publicly.
 
-## Current status
+## Features
 
-Implemented:
+- **Event lifecycle:** draft, publish, run, and close events with role-aware
+  organizer tools.
+- **Low-friction registration:** visitors register for published events with
+  their name and email; no participant account is required for this flow.
+- **Teams and projects:** create teams, invite members, manage leadership,
+  and submit one project per team.
+- **Challenges and judging:** define categories and weighted criteria, collect
+  judge evaluations, and calculate project rankings.
+- **Live results:** stream ranking updates over Server-Sent Events (SSE);
+  Redis caching is optional.
+- **Certificates:** generate PDF certificates with QR codes and public
+  integrity checks.
+- **Dashboards and exports:** view public event metrics, role-scoped
+  dashboards, and export data as CSV or XLSX.
+- **Optional integrations:** email, Telegram notifications, and OpenAI-backed
+  event assistance and project feedback require provider credentials.
+- **Session security:** revocable sessions with HTTP-only cookies, rotating
+  refresh tokens, and role-based access control.
 
-- revocable JWT sessions through HTTP-only access and rotating refresh cookies
-- user profiles and admin, organizer, judge and participant roles
-- event management and controlled lifecycle transitions
-- team creation, actionable invitations, invite codes and leadership transfer
-- challenge categories, weighted criteria and project submissions
-- judge evaluations, rankings and an SSE ranking stream
-- notifications, dashboards and CSV/XLSX exports
-- PDF certificates with QR verification and tamper detection
-- optional OpenAI-backed assistant and project feedback
+## Technology
 
-Known boundaries:
+For a quick, copyable list of the technologies used in HackHub, see
+[the full stack reference](STACK.md).
 
-- SQLite is the supported database for the current single-instance setup.
-- Redis is optional; ranking falls back to uncached database queries.
-- certificate authenticity uses a server-side keyed hash; PDFs are not signed
-  with a public-key document signature.
-- push delivery, billing, custom domains and distributed workers are not
-  implemented.
-- SMTP, Telegram and OpenAI paths require provider credentials and staging
-  validation before a production launch.
+| Layer | Stack |
+| --- | --- |
+| Web | Next.js 16, React, TypeScript, Tailwind CSS, TanStack Query, Zustand |
+| API | FastAPI, Python 3.12, Pydantic, SQLAlchemy async |
+| Persistence | SQLite for the supported single-instance setup; Alembic migrations |
+| Optional services | Redis cache, SMTP, Telegram Bot API, OpenAI API |
+| Operations | Docker Compose, Nginx, GitHub Actions |
 
-The durable internal map is in [`MEMORIA/INDEX.md`](MEMORIA/INDEX.md).
+## Get started
 
-## Stack
+### Requirements
 
-| Area     | Technologies                                                               |
-| -------- | -------------------------------------------------------------------------- |
-| Frontend | Next.js 16, React, TypeScript, Tailwind, Radix UI, TanStack Query, Zustand |
-| Backend  | FastAPI, SQLAlchemy async, Pydantic, JWT, SlowAPI                          |
-| Data     | SQLite with aiosqlite; optional Redis cache                                |
-| Tooling  | pytest, black, flake8, ESLint, TypeScript, Docker Compose, Nginx           |
+- Python 3.12 or newer
+- Node.js 20 or newer
+- Docker with the Compose plugin (optional)
+- Redis (optional for local development)
 
-## Quick start
-
-Requirements: Python 3.12+ and Node.js 20+. Redis and Docker are optional.
+### Run locally
 
 ```bash
-git clone https://github.com/Mohamed-Sll/hackhub-platform.git
+git clone https://github.com/mohamedsillahhh-cloud/hackhub-platform.git
 cd hackhub-platform
 
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
 
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux:        source .venv/bin/activate
+python -m pip install -r backend/requirements-dev.txt
+
 cd backend
-python -m venv venv
-# Windows: .\venv\Scripts\Activate.ps1
-# Linux/macOS: source venv/bin/activate
-pip install -r requirements-dev.txt
 alembic upgrade head
-uvicorn app.main:app --reload
+python -m app.create_first_admin
+uvicorn app.main:app --reload --port 8000
 ```
 
-In another terminal:
+The setup command interactively creates the first verified administrator. It
+refuses to run once an administrator already exists. Keep this account's
+credentials private; privileged roles are not selectable during public signup.
+Public registration creates participant accounts. To grant organizer access to
+an existing account, run this from `backend/` using the same database
+configuration as the API:
+
+```bash
+python -m app.set_organizer organizer@example.com
+```
+
+The command requires shell access to the installation, verifies that the
+account exists and is active, and does not expose role changes through the
+public API. The user should sign out and sign back in before opening the
+organizer dashboard and creating events.
+
+For a self-hosted installation without SMTP, an administrator with shell access
+can reset an account password from `backend/` with `python -m app.reset_password`.
+The command asks for the account email, confirmation, and the new password, then
+revokes that account's active sessions.
+
+In a second terminal, from the repository root:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-The frontend runs at `http://localhost:3000`, the API at
-`http://localhost:8000`, and Swagger at `http://localhost:8000/docs`.
-In development, missing SQLite tables may be created on startup. Keep
-`alembic upgrade head` in the startup sequence so local and deployed schemas
-follow the same versioned path.
+Open the web app at `http://localhost:3000` and the API documentation at
+`http://localhost:8000/docs`. The backend uses the SQLite URL from
+`backend/.env.example`; apply Alembic migrations before starting it.
 
-To run the full stack through Docker:
+### Run with Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-Nginx exposes the application at `http://localhost`.
+The web app is available at `http://localhost` through Nginx. Compose also
+starts the API and Redis and stores the SQLite database in a named volume.
+The default Compose configuration is for local development. For a production
+deployment, set a unique `SECRET_KEY`, HTTPS `APP_URL` and `CORS_ORIGINS`,
+`ENVIRONMENT=production`, and `AUTO_CREATE_TABLES=false`; configure trusted
+hosts and external delivery providers for your environment. The API validates
+production secret, origin, and migration settings at startup.
 
 ## Configuration
 
-The complete development defaults live in `backend/.env.example` and
-`frontend/.env.example`. Important backend settings:
+Copy the example files and change only the settings you need:
 
-| Variable             | Purpose                                                  |
-| -------------------- | -------------------------------------------------------- |
-| `DATABASE_URL`       | SQLAlchemy async URL; defaults to local SQLite           |
-| `SECRET_KEY`         | JWT/signature secret; use at least 32 random characters  |
-| `APP_URL`            | Public frontend origin used in links and QR codes        |
-| `CORS_ORIGINS`       | Comma-separated trusted browser origins                 |
-| `TRUSTED_HOSTS`      | Comma-separated HTTP Host allowlist                     |
-| `AUTO_CREATE_TABLES` | Development convenience; must be `false` in production  |
-| `REDIS_URL`          | Optional ranking cache and AI usage counters             |
-| `OPENAI_API_KEY`     | Optional AI provider credential                          |
-| `SMTP_*`             | Optional email transport                                 |
-| `TELEGRAM_BOT_TOKEN` | Optional Telegram delivery credential                    |
+- [`backend/.env.example`](backend/.env.example) — API, database, session,
+  mail, Telegram, and AI settings.
+- [`frontend/.env.example`](frontend/.env.example) — public API base URL.
 
-`ENVIRONMENT=production` additionally requires HTTPS origins, a strong secret
-and migrations instead of startup table creation. Readiness is exposed at
-`/health/ready`; liveness is exposed at `/health/live`.
+Keep real credentials out of source control. Optional integrations are
+unavailable until their provider credentials are configured. For the complete
+operational boundaries and module overview, see
+[Architecture](docs/ARCHITECTURE.md).
 
-## Database operations
-
-Alembic owns persistent schema changes. The backend container detects a legacy
-pre-Alembic SQLite database, stamps its known baseline and then upgrades it.
-Back up the database before every deployment:
-
-```bash
-python scripts/backup_sqlite.py backend/hackhub.db backups
-cd backend
-alembic upgrade head
-alembic check
-```
-
-The backup command uses SQLite's online backup API and verifies the resulting
-file with `PRAGMA integrity_check`.
-
-## Project structure
+## Project layout
 
 ```text
-backend/app/
-  api/v1/endpoints/  HTTP routes
-  core/              configuration, database, auth dependencies
-  models/            SQLAlchemy models
-  schemas/           Pydantic API contracts
-  services/          domain rules
-  repositories/      reusable data access
-frontend/src/
-  app/                Next.js routes
-  components/         UI and domain components
-  hooks/              TanStack Query hooks
-  lib/api.ts          Axios API client
-  store/              Zustand state
-MEMORIA/              durable project knowledge
+backend/       FastAPI application, domain services, API, migrations, tests
+frontend/      Next.js application, routes, components, hooks, and state
+STACK.md       Quick reference for the project's technology stack
+docs/          Architecture and technical project notes
+scripts/       Local setup and SQLite backup utilities
+MEMORIA/       Maintainer reference for domain rules and decisions
 ```
 
-## Verification
+## Project status
 
-```bash
-cd backend
-pytest -q
-alembic -x database_url=sqlite+aiosqlite:///./migration-test.db upgrade head
-alembic -x database_url=sqlite+aiosqlite:///./migration-test.db check
-black --check app tests alembic --line-length=120
-isort --check-only app tests alembic --profile black
-flake8 app tests alembic --max-line-length=120 --extend-ignore=E203,W503
-pip-audit -r requirements-dev.txt
+HackHub is an open-source project with a working single-instance deployment
+baseline. SQLite is the supported database configuration today. High
+availability, horizontal scaling, billing, custom domains, background job
+workers, and public-key PDF signatures are outside the current implementation.
+Email, Telegram, and OpenAI integrations need real provider credentials and
+staging validation before production use.
 
-cd ../frontend
-npm run lint
-npm run typecheck
-npm run build
-npm audit --omit=dev --audit-level=high
+Public event registrations collect a name and email and are visible only to
+the event owner and administrators. Organizers can remove registrations from
+the dashboard. Email confirmation is not sent by this flow. The first
+administrator for a self-hosted installation is created with
+`python -m app.create_first_admin` from `backend/` after applying migrations.
+For the product direction and staged scope, see the [product plan](docs/PRODUCT_PLAN.md).
 
-cd ..
-bash scripts/check-memoria.sh
-```
+## Development and contributions
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a change.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local setup, code checks, and pull
+request guidance. The project uses pytest, Alembic, Black, isort, Flake8,
+ESLint, TypeScript checks, and Playwright browser flows. Run `npx playwright
+install chromium` once from `frontend/` before `npm run test:e2e`. These browser
+tests use isolated API fixtures and do not modify a developer's database. CI
+runs backend checks and tests, frontend lint/type checks/build and browser
+flows, dependency audit, and Docker image build.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+HackHub is distributed under the [MIT License](LICENSE).
+
+---
+
+Built by [Mohamed Sillah](https://github.com/mohamedsillahhh-cloud). Issues
+and contributions are welcome.

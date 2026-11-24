@@ -8,7 +8,7 @@ from sqlalchemy.orm import noload
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.auth_session import AuthSession
-from app.models.event import Event
+from app.models.event import Event, EventStatus
 from app.models.user import User, UserRole
 
 
@@ -71,6 +71,15 @@ async def get_current_user(
     return user
 
 
+async def get_optional_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    if not request.cookies.get("access_token") and not request.headers.get("Authorization", "").startswith("Bearer "):
+        return None
+    return await get_current_user(request, db)
+
+
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
@@ -118,4 +127,32 @@ async def require_event_manager(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Event manager access required",
         )
+    return event
+
+
+async def require_public_event(db: AsyncSession, event_id: UUID) -> Event:
+    result = await db.execute(
+        select(Event).where(
+            Event.id == event_id,
+            Event.status.in_([EventStatus.PUBLISHED, EventStatus.IN_PROGRESS, EventStatus.CLOSED]),
+        )
+    )
+    event = result.scalar_one_or_none()
+    if event is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    return event
+
+
+async def require_event_read_access(
+    db: AsyncSession,
+    event_id: UUID,
+    current_user: User | None = None,
+) -> Event:
+    event = await db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    if event.status == EventStatus.DRAFT and (
+        current_user is None or (current_user.role != UserRole.ADMIN and current_user.id != event.organizer_id)
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return event
